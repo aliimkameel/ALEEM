@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>برنامج تسعير الإعلان</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="icon" href="icon-512.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content=" برنامج تسعير الإعلان">
+<style>
+  :root {
+    --gold: #d9a253;
+    --gold-soft: rgba(217,162,83,0.15);
+  }
+  html[data-theme="dark"] {
+    --bg: #0b0c0e;
+    --card-bg: rgba(24,26,30,0.85);
+    --card-border: rgba(255,255,255,0.08);
+    --text-main: #f2f2f2;
+    --text-sub: #9a9a9a;
+    --input-bg: rgba(255,255,255,0.05);
+    --input-border: rgba(255,255,255,0.12);
+    --row-hover: rgba(217,162,83,0.08);
+    --row-alt: rgba(255,255,255,0.02);
+    --divider: rgba(255,255,255,0.08);
+    --table-head-bg: #1c1e22;
+    --table-head-text: #f2f2f2;
+    --result-bg: rgba(255,255,255,0.04);
+    --result-border: rgba(255,255,255,0.08);
+    --danger-bg: rgba(224,90,90,0.15);
+    --danger-text: #e05a5a;
+    --total-color: var(--gold);
+    --neu-bg: #17191d;
+    --neu-shadow-dark: #08090a;
+    --neu-shadow-light: #262930;
+  }
+  html[data-theme="light"] {
+    --bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --card-border: #e7e7ea;
+    --text-main: #1f2226;
+    --text-sub: #6b6f76;
+    --input-bg: #f8f8f9;
+    --input-border: #dcdde1;
+    --row-hover: rgba(217,162,83,0.10);
+    --row-alt: #fafafb;
+    --divider: #eceded;
+    --table-head-bg: #1f2226;
+    --table-head-text: #f2f2f2;
+    --result-bg: #f8f8f9;
+    --result-border: #e7e7ea;
+    --danger-bg: #fde8e8;
+    --danger-text: #c0392b;
+    --total-color: #000000;
+    --neu-bg: #eef0f3;
+    --neu-shadow-dark: #c9cdd3;
+    --neu-shadow-light: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 24px 16px;
+    transition: background 0.25s ease;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    padding: clamp(16px, 4vw, 40px);
+    width: 100%;
+    max-width: 1180px;
+    position: relative;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: background 0.25s ease, border-color 0.25s ease;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; left: 0;
+    height: 3px;
+    background: var(--gold);
+    border-radius: 22px 22px 0 0;
+  }
+  .theme-toggle {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 0;
+    font-size: 18px;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .theme-toggle:hover { transform: rotate(20deg); }
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .header .icon-frame {
+    width: clamp(64px, 10vw, 84px);
+    height: clamp(64px, 10vw, 84px);
+    margin: 0 auto 14px;
+    border: 1.5px solid var(--gold);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gold-soft);
+  }
+  .header img {
+    width: 65%;
+    height: 65%;
+    border-radius: 12px;
+  }
+  h2 {
+    text-align: center;
+    margin: 0;
+    color: var(--text-main);
+    font-size: clamp(18px, 3.5vw, 26px);
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  h2 .sub {
+    display: block;
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 600;
+    margin-top: 6px;
+    letter-spacing: 2px;
+  }
+  .section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--divider);
+  }
+  .section:first-of-type {
+    border-top: none;
+    margin-top: 10px;
+  }
+  h3 {
+    text-align: right;
+    color: var(--text-main);
+    margin: 0 0 16px 0;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+  }
+  h3::before {
+    content: "";
+    width: 5px;
+    height: 20px;
+    background: var(--gold);
+    border-radius: 4px;
+    display: inline-block;
+  }
+  label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--text-sub);
+    font-size: 13px;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 15px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input[type="number"]::placeholder { color: var(--text-sub); opacity: 0.7; }
+  select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 15px;
+    background: var(--input-bg);
+    color: var(--text-main);
+  }
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--gold-soft);
+  }
+  .word-block {
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 14px;
+    background: var(--input-bg);
+    position: relative;
+  }
+  .word-block .word-title {
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+  .word-block .remove-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .add-word-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 13px;
+    border: none;
+    background: var(--gold);
+    color: #241a05;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.12s, transform 0.12s;
+  }
+  .add-word-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+  .add-word-btn.editing {
+    background: var(--gold);
+    color: #241a05;
+  }
+  .cancel-edit-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid var(--input-border);
+    background: transparent;
+    color: var(--text-sub);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+  }
+  .word-price {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-sub);
+    text-align: left;
+  }
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--text-main);
+  }
+  .checkbox-label input {
+    width: auto;
+    transform: scale(1.15);
+    accent-color: var(--gold);
+  }
+
+  .words-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .word-form {
+    flex: 0 0 260px;
+    min-width: 260px;
+    border: 1px solid var(--input-border);
+    border-radius: 14px;
+    padding: 18px;
+    background: var(--input-bg);
+  }
+  .word-form .editing-label {
+    display: none;
+    background: var(--gold-soft);
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    text-align: center;
+    border: 1px solid var(--gold);
+  }
+  .live-preview {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--gold-soft);
+    border: 1px dashed var(--gold);
+  }
+  .live-preview .lp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-main);
+    padding: 3px 0;
+  }
+  .live-preview .lp-row span:last-child {
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .word-list-wrapper {
+    flex: 1 1 500px;
+    min-width: 0;
+    border: 1px solid var(--input-border);
+    border-radius: 14px;
+  }
+  .words-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .words-table th, .words-table td {
+    border-bottom: 1px solid var(--divider);
+    padding: 12px 6px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-main);
+  }
+  .words-table thead th {
+    background: var(--table-head-bg);
+    color: var(--table-head-text);
+    font-weight: 700;
+    font-size: 13px;
+    position: sticky;
+    top: 0;
+  }
+  .words-table tbody tr {
+    transition: background 0.12s;
+    cursor: pointer;
+  }
+  .words-table tbody tr:nth-child(even) {
+    background: var(--row-alt);
+  }
+  .words-table tbody tr:hover {
+    background: var(--row-hover);
+  }
+  .words-table tbody tr.editing-row,
+  .users-table tbody tr.editing-row {
+    background: var(--gold-soft);
+  }
+  .words-table .delete-cell button {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .words-table .empty-row td {
+    color: var(--text-sub);
+    padding: 24px;
+    font-size: 14px;
+  }
+  .table-total-row td {
+    background: var(--gold-soft);
+    color: var(--total-color);
+    font-weight: 700;
+    border-top: 2px solid var(--gold);
+    border-bottom: none;
+  }
+  .hint-text {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  .result {
+    margin-top: 24px;
+    background: var(--result-bg);
+    border: 1px solid var(--result-border);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+  }
+  .result .meters {
+    font-size: 15px;
+    color: var(--text-main);
+    margin-bottom: 8px;
+  }
+  .result .price {
+    font-size: 25px;
+    font-weight: bold;
+    color: var(--gold);
+  }
+  .result.grand-total {
+    border: 1.5px solid var(--gold);
+  }
+  .result.grand-total .price {
+    font-size: 32px;
+    color: var(--gold);
+  }
+  .footer-credit {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--text-sub);
+    letter-spacing: 0.3px;
+  }
+  /* شاشات متوسطة (تابلت) */
+  @media (max-width: 900px) {
+    .card {
+      max-width: 96%;
+    }
+    .words-table {
+      font-size: 12px;
+    }
+    .words-table th, .words-table td {
+      padding: 10px 4px;
+    }
+  }
+
+  /* لما المساحة ما تكفي لعرض النموذج والجدول جنب بعض بشكل مريح */
+  @media (max-width: 760px) {
+    .words-layout {
+      flex-direction: column;
+    }
+    .word-form, .word-list-wrapper {
+      width: 100%;
+      flex-basis: auto;
+      min-width: 0;
+    }
+  }
+
+  /* موبايل */
+  @media (max-width: 480px) {
+    body {
+      padding: 12px 8px;
+    }
+    .card {
+      padding: 18px;
+      border-radius: 16px;
+      max-width: 100%;
+    }
+    h2 {
+      font-size: 18px;
+    }
+    h2 .sub {
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+    h3 {
+      font-size: 15px;
+    }
+    .result .price {
+      font-size: 19px;
+    }
+    .result.grand-total .price {
+      font-size: 24px;
+    }
+    label {
+      font-size: 12px;
+    }
+    input[type="number"] {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+    .add-word-btn {
+      font-size: 14px;
+      padding: 11px;
+    }
+    .word-list-wrapper {
+      overflow-x: auto;
+    }
+    .words-table {
+      min-width: 560px;
+      font-size: 11px;
+    }
+    .words-table th, .words-table td {
+      padding: 8px 4px;
+    }
+  }
+
+  /* موبايل صغير جداً */
+  @media (max-width: 360px) {
+    h2 {
+      font-size: 16px;
+    }
+    .header .icon-frame {
+      width: 56px;
+      height: 56px;
+    }
+    .words-table {
+      min-width: 520px;
+      font-size: 10.5px;
+    }
+  }
+</style>
+
+<style>
+  /* ===== نظام تسجيل الدخول - تصميم نيومورفيزم بألوان البرنامج ===== */
+
+  .login-card {
+    background: var(--neu-bg);
+    border-radius: 32px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 10px 10px 20px var(--neu-shadow-dark), -10px -10px 20px var(--neu-shadow-light);
+  }
+  .login-card .icon-frame {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neu-bg);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+  }
+  .login-card .icon-frame img { width: 68%; height: 68%; border-radius: 50%; object-fit: cover; }
+  .login-card h2 { margin: 0 0 4px; font-size: 20px; color: var(--text-main); font-weight: 800; }
+  .login-card p { margin: 0 0 26px; font-size: 12.5px; color: var(--text-sub); letter-spacing: 0.5px; }
+
+  .neu-input-wrap { position: relative; margin-top: 16px; }
+  .neu-input-wrap .neu-icon {
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    transform: translateY(-50%);
+    font-size: 16px;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .neu-input-wrap .neu-toggle-pw {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    font-size: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 4px;
+    line-height: 1;
+    transition: opacity 0.15s;
+  }
+  .neu-input-wrap .neu-toggle-pw:hover { opacity: 1; }
+  .neu-input-wrap input[type="password"],
+  .neu-input-wrap input[type="text"].pw-visible {
+    padding-left: 18px;
+  }
+  .login-card input,
+  .add-user-card input {
+    width: 100%;
+    padding: 14px 46px 14px 18px;
+    border-radius: 50px;
+    border: none;
+    background: var(--neu-bg);
+    color: var(--text-main);
+    font-size: 14px;
+    box-sizing: border-box;
+    box-shadow: inset 5px 5px 10px var(--neu-shadow-dark), inset -5px -5px 10px var(--neu-shadow-light);
+  }
+  .login-card input::placeholder,
+  .add-user-card input::placeholder { color: var(--text-sub); }
+  .login-card input:focus,
+  .add-user-card input:focus { outline: none; }
+
+  .login-card .add-word-btn {
+    border-radius: 50px;
+    background: var(--gold);
+    box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
+    border: none;
+  }
+  .login-card .add-word-btn:hover { filter: brightness(1.06); }
+
+  .login-error {
+    display: none;
+    margin-top: 16px;
+    color: #e05a5a;
+    font-size: 12.5px;
+    background: rgba(224,90,90,0.12);
+    border: 1px solid rgba(224,90,90,0.3);
+    border-radius: 12px;
+    padding: 9px;
+  }
+
+  .user-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-main);
+  }
+  .user-bar .user-welcome {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .user-bar .user-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .user-bar .user-actions button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--input-border);
+    background: transparent;
+    color: var(--text-main);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .user-bar .user-actions button svg { flex: 0 0 auto; }
+  .user-bar .role-badge {
+    background: var(--gold-soft);
+    color: var(--gold);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+
+  /* ===== لوحة إدارة المستخدمين (Modal) ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 26px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .modal-box h3 { margin: 0 0 16px; color: var(--text-main); text-align: center; }
+  .modal-close-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 11px;
+    border: 1px solid var(--input-border);
+    background: transparent;
+    color: var(--text-sub);
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .users-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 18px; }
+  .users-table th, .users-table td {
+    border-bottom: 1px solid var(--divider);
+    padding: 9px 6px;
+    text-align: center;
+    color: var(--text-main);
+  }
+  .users-table thead th { background: var(--table-head-bg); color: var(--table-head-text); font-size: 12px; }
+  .users-table .delete-cell button {
+    background: var(--danger-bg); color: var(--danger-text);
+    border: none; border-radius: 8px; padding: 5px 9px; font-size: 11px; cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+  }
+  .users-table .delete-cell button:hover { transform: translateY(-1px); filter: brightness(1.15); }
+
+  /* ===== صفحة إدارة المستخدمين - تصميم احترافي متوسط ===== */
+  .users-section { display: flex; flex-direction: column; align-items: center; }
+  .users-section > h3 { align-self: center; }
+
+  .users-table-shell {
+    width: 100%;
+    max-width: 620px;
+    border-radius: 16px;
+    padding: 4px;
+    background: linear-gradient(135deg, var(--gold), transparent 60%);
+  }
+  .users-table-shell .word-list-wrapper {
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--card-bg);
+  }
+  .users-table tbody tr {
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .users-table tbody tr:hover {
+    background: var(--gold-soft);
+  }
+
+  .add-user-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--neu-bg);
+    border-radius: 24px;
+    padding: 28px 26px;
+    box-shadow: 8px 8px 18px var(--neu-shadow-dark), -8px -8px 18px var(--neu-shadow-light);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .add-user-card .neu-input-wrap:first-child { margin-top: 0; }
+  .add-user-card input,
+  .add-user-card select {
+    transition: box-shadow 0.25s ease, transform 0.15s ease;
+  }
+  .add-user-card input:focus,
+  .add-user-card select:focus {
+    box-shadow: inset 3px 3px 7px var(--neu-shadow-dark), inset -3px -3px 7px var(--neu-shadow-light), 0 0 0 3px var(--gold-soft);
+    transform: translateY(-1px);
+  }
+
+  .neu-select-wrap {
+    position: relative;
+    margin-top: 16px;
+  }
+  .neu-select-wrap select {
+    width: 100%;
+    padding: 14px 46px 14px 18px;
+    border-radius: 50px;
+    border: none;
+    background: var(--neu-bg);
+    color: var(--text-main);
+    font-size: 14px;
+    box-sizing: border-box;
+    box-shadow: inset 5px 5px 10px var(--neu-shadow-dark), inset -5px -5px 10px var(--neu-shadow-light);
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  .neu-select-wrap select:focus { outline: none; }
+  .neu-select-wrap .neu-icon {
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    transform: translateY(-50%);
+    font-size: 15px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .neu-select-wrap::after {
+    content: "▾";
+    position: absolute;
+    top: 50%;
+    left: 18px;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  .add-user-card .add-word-btn {
+    border-radius: 50px;
+    margin-top: 22px;
+    background: var(--gold);
+    box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
+    border: none;
+    transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  }
+  .add-user-card .add-word-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.07);
+    box-shadow: 8px 10px 18px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
+  }
+  .add-user-card .add-word-btn:active { transform: translateY(0); }
+
+  @media (max-width: 480px) {
+    .add-user-card { padding: 22px 18px; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- شاشة تسجيل الدخول -->
+  <div class="login-card" id="loginCard">
+    <div class="icon-frame">
+      <img src="icon-512.png" alt="شعار البرنامج">
+    </div>
+    <h2>تسجيل الدخول</h2>
+    <p>أدخل اسم المستخدم وكلمة المرور للمتابعة</p>
+    <form id="loginForm">
+      <div class="neu-input-wrap">
+        <input type="text" id="loginUsername" placeholder="اسم المستخدم" autocomplete="off" list="usernamesList">
+        <datalist id="usernamesList"></datalist>
+        <span class="neu-icon">👤</span>
+      </div>
+      <div class="neu-input-wrap">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور" autocomplete="off">
+        <button type="button" class="neu-toggle-pw" data-target="loginPassword" title="إظهار/إخفاء كلمة المرور">👁️</button>
+      </div>
+      <button type="submit" class="add-word-btn" style="margin-top:14px;">دخول</button>
+    </form>
+    <div class="login-error" id="loginError">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+  </div>
+
+  <div class="card" id="appCard" style="display:none;">
+    <div class="user-bar">
+      <div class="user-welcome">مرحباً، <strong id="currentUserName"></strong><span class="role-badge" id="currentUserRoleBadge"></span></div>
+      <div class="user-actions">
+        <button type="button" class="theme-toggle" id="themeToggle" title="تبديل الوضع الليلي/النهاري">🌙</button>
+        <button type="button" id="logoutBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          خروج
+        </button>
+      </div>
+    </div>
+
+    <div class="header">
+      <div class="icon-frame">
+        <img src="icon-512.png" alt="شعار البرنامج">
+      </div>
+      <h2>بـرنـامـج تسـعيـر الإعـــلان
+        <span class="sub">ADVERTISING PRICE CALCULATOR</span>
+      </h2>
+    </div>
+
+    <button type="button" class="add-word-btn" id="openUsersPanelBtn" style="display:none;">👥 إدارة المستخدمين</button>
+
+    <div class="section">
+      <h3>كلمات الإعلان</h3>
+      <div class="words-layout">
+        <div class="word-form">
+          <div class="editing-label" id="editingLabel">تعديل الكلمة رقم <span id="editingLabelNumber"></span></div>
+
+          <label for="newWordHeight">الارتفاع (سم)</label>
+          <input type="number" id="newWordHeight" step="1" placeholder="مثال: 58">
+
+          <label for="newWordWidth">العرض (سم)</label>
+          <input type="number" id="newWordWidth" step="1" placeholder="مثال: 120">
+
+          <label for="newWordQty">العدد</label>
+          <input type="number" id="newWordQty" step="1" min="1" value="1" placeholder="مثال: 2">
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="newWordStroke">
+            <span>ستروك ثالث</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="newWordBox">
+            <span>بوكس</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="newWordJackBox">
+            <span>وجهين</span>
+          </label>
+
+          <div class="live-preview">
+            <div class="lp-row"><span>عدد الأمتار</span><span id="previewMeters">0</span></div>
+            <div class="lp-row"><span>السعر</span><span id="previewPrice">0</span></div>
+          </div>
+
+          <button type="button" class="add-word-btn" id="addWordBtn">+ إضافة</button>
+          <button type="button" class="cancel-edit-btn" id="cancelEditBtn">إلغاء التعديل</button>
+        </div>
+
+        <div class="word-list-wrapper">
+          <table class="words-table">
+            <thead>
+              <tr>
+                <th>ت</th>
+                <th>الارتفاع</th>
+                <th>العرض</th>
+                <th>العدد</th>
+                <th>ستروك</th>
+                <th>بوكس</th>
+                <th>وجهين</th>
+                <th>الأمتار</th>
+                <th>السعر</th>
+                <th>حذف</th>
+              </tr>
+            </thead>
+            <tbody id="wordsTableBody">
+              <tr class="empty-row">
+                <td colspan="10">ما اضفت أي كلمة بعد</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="table-total-row">
+                <td colspan="7">المجموع</td>
+                <td id="wordsSumMeters">0</td>
+                <td id="wordsSumPrice">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="hint-text">اضغط ضغطتين (Double Click) على أي صف بالجدول لتعديل بياناته</div>
+    </div>
+
+    <div class="section">
+      <h3>الفريمات</h3>
+      <div class="words-layout">
+        <div class="word-form">
+          <div class="editing-label" id="frameEditingLabel">تعديل فريم رقم <span id="frameEditingLabelNumber"></span></div>
+
+          <label for="newFrameHeight">الارتفاع (سم)</label>
+          <input type="number" id="newFrameHeight" step="1" placeholder="مثال: 60">
+
+          <label for="newFrameWidth">العرض (سم)</label>
+          <input type="number" id="newFrameWidth" step="1" placeholder="مثال: 130">
+
+          <label for="newFrameQty">العدد</label>
+          <input type="number" id="newFrameQty" step="1" min="1" value="1" placeholder="مثال: 2">
+
+          <div class="live-preview">
+            <div class="lp-row"><span>عدد الأمتار</span><span id="framePreviewMeters">0</span></div>
+            <div class="lp-row"><span>سعر الفريم</span><span id="framePreviewPrice">0</span></div>
+          </div>
+
+          <button type="button" class="add-word-btn" id="addFrameBtn">+ إضافة</button>
+          <button type="button" class="cancel-edit-btn" id="cancelFrameEditBtn">إلغاء التعديل</button>
+        </div>
+
+        <div class="word-list-wrapper">
+          <table class="words-table">
+            <thead>
+              <tr>
+                <th>ت</th>
+                <th>الارتفاع</th>
+                <th>العرض</th>
+                <th>العدد</th>
+                <th>الأمتار</th>
+                <th>السعر</th>
+                <th>حذف</th>
+              </tr>
+            </thead>
+            <tbody id="framesTableBody">
+              <tr class="empty-row">
+                <td colspan="7">ما اضفت أي فريم بعد</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="table-total-row">
+                <td colspan="4">المجموع</td>
+                <td id="framesSumMeters">0</td>
+                <td id="framesSumPrice">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="hint-text">اضغط ضغطتين (Double Click) على أي صف بالجدول لتعديل بياناته</div>
+    </div>
+
+    <div class="section">
+      <h3>أسعار إضافية</h3>
+
+      <label for="basketPrice">سعر الباسكت</label>
+      <input type="number" id="basketPrice" step="1" placeholder="مثال: 150">
+      <div class="hint-text" id="basketPriceHint" style="text-align:right; margin-top:4px;">= 0 د.ع</div>
+
+      <label for="cranePrice">سعر الرافعة</label>
+      <input type="number" id="cranePrice" step="1" placeholder="مثال: 150">
+      <div class="hint-text" id="cranePriceHint" style="text-align:right; margin-top:4px;">= 0 د.ع</div>
+    </div>
+
+    <div class="result">
+      <div class="meters">مجموع عدد الأمتار (كل الكلمات): <span id="meters">0</span> متر طولي</div>
+      <div class="price"><span id="price">0</span> د.ع</div>
+    </div>
+
+    <div class="result">
+      <div class="meters">سعر الفريمات الكلي: <span id="framePrice">0</span> د.ع</div>
+    </div>
+
+    <div class="result grand-total">
+      <div class="meters">المجموع الكلي</div>
+      <div class="price" id="totalPrice">0 د.ع</div>
+    </div>
+
+    <button type="button" class="add-word-btn" id="exportPdfBtn">📄 تصدير PDF</button>
+    <button type="button" class="add-word-btn" id="clearAllBtn">🗑 تفريغ كل المعلومات</button>
+
+    <div class="footer-credit">Design &amp; Development by Aleem Al-Ibrahimi</div>
+  </div>
+
+  <!-- منطقة مخفية تستخدم فقط عند توليد ملف PDF -->
+  <div id="pdfExportArea" style="position:fixed; top:0; left:-9999px; width:820px; box-sizing:border-box; background:#ffffff; padding:32px; direction:rtl; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color:#1a1a1a;"></div>
+
+  <!-- صفحة إدارة المستخدمين الكاملة (تظهر فقط للأدمن) -->
+  <div class="card" id="usersPageCard" style="display:none;">
+    <div class="header">
+      <div class="icon-frame">
+        <img src="icon-512.png" alt="شعار البرنامج">
+      </div>
+      <h2>إدارة المستخدمين
+        <span class="sub">USER MANAGEMENT</span>
+      </h2>
+    </div>
+
+    <button type="button" class="cancel-edit-btn" id="backToAppBtn" style="display:block;">← رجوع للحاسبة</button>
+
+    <div class="section users-section" style="border-top:none; margin-top:10px;">
+      <h3>المستخدمون الحاليون</h3>
+      <div class="hint-text" style="margin-top:0; margin-bottom:12px;">اضغط ضغطتين (Double Click) على أي مستخدم لتعديل بياناته</div>
+      <div class="users-table-shell">
+        <div class="word-list-wrapper">
+          <table class="users-table">
+            <thead>
+              <tr><th>اسم المستخدم</th><th>الدور</th><th>حذف</th></tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="section users-section">
+      <h3>إضافة مستخدم جديد</h3>
+      <div class="add-user-card">
+        <div class="neu-input-wrap">
+          <input type="text" id="newUsername" placeholder="اسم المستخدم الجديد" autocomplete="off">
+          <span class="neu-icon">👤</span>
+        </div>
+        <div class="neu-input-wrap">
+          <input type="password" id="newUserPassword" placeholder="كلمة المرور" autocomplete="off">
+          <button type="button" class="neu-toggle-pw" data-target="newUserPassword" title="إظهار/إخفاء كلمة المرور">👁️</button>
+        </div>
+        <div class="neu-select-wrap">
+          <select id="newUserRole">
+            <option value="user">مستخدم عادي</option>
+            <option value="admin">أدمن</option>
+          </select>
+          <span class="neu-icon">🛡️</span>
+        </div>
+        <button type="button" class="add-word-btn" id="addUserBtn">+ إضافة مستخدم</button>
+        <button type="button" class="cancel-edit-btn" id="cancelUserEditBtn" style="display:none;">إلغاء التعديل</button>
+        <div class="login-error" id="usersPanelError"></div>
+      </div>
+
+      <div class="hint-text" style="max-width:420px; margin:16px auto 0;">
+        بعد إضافة أو تعديل أو حذف أي مستخدم، اضغط الزر تحت حتى تحمّل ملف <b>users.txt</b> المحدث، وبعدين ارفعه (استبدل القديم) على استضافتك (مثل GitHub) حتى يشوف كل زائر جديد نفس التحديث.
+      </div>
+      <div style="max-width:420px; margin:10px auto 0;">
+        <button type="button" class="add-word-btn" id="downloadUsersTxtBtn" style="background:transparent; border:1.5px solid var(--gold); color:var(--gold); box-shadow:none;">⬇️ تنزيل ملف users.txt المحدث</button>
+      </div>
+    </div>
+
+    <div class="footer-credit">Design &amp; Development by Aleem Al-Ibrahimi</div>
+  </div>
+
+<script>
+
+  // ================= نظام تسجيل الدخول وإدارة المستخدمين =================
+  const USERS_KEY = 'adcalc_users_v2';
+  const SESSION_KEY = 'adcalc_session_v2';
+  const DEFAULT_ADMIN = { username: 'admin', password: 'Aleem2026' };
+
+
+  function loadUsers() {
+    try {
+      const raw = localStorage.getItem(USERS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+
+  function saveUsers(users) {
+    try { localStorage.setItem(USERS_KEY, JSON.stringify(users)); } catch (e) {}
+  }
+
+  // تحويل قائمة المستخدمين إلى نص users.txt (كل سطر: username|password|role)
+  function usersToTxt(users) {
+    return users.map(u => `${u.username}|${u.password}|${u.role}`).join('\n') + '\n';
+  }
+
+  // تحويل محتوى users.txt إلى مصفوفة مستخدمين
+  function txtToUsers(text) {
+    return text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith('#'))
+      .map(line => {
+        const parts = line.split('|');
+        return { username: (parts[0] || '').trim(), password: (parts[1] || '').trim(), role: (parts[2] || 'user').trim() };
+      })
+      .filter(u => u.username);
+  }
+
+  // محاولة تحميل المستخدمين من ملف users.txt الموجود بنفس مجلد الموقع (يشتغل بس لو الملف موجود فعلاً على الاستضافة)
+  async function loadUsersFromTxtFile() {
+    try {
+      const response = await fetch('users.txt', { cache: 'no-store' });
+      if (!response.ok) return null;
+      const text = await response.text();
+      const users = txtToUsers(text);
+      return users.length > 0 ? users : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function ensureDefaultAdmin() {
+    // أولاً نحاول نجيب المستخدمين من ملف users.txt المشترك (لو موجود على الاستضافة)
+    const fileUsers = await loadUsersFromTxtFile();
+    if (fileUsers) {
+      saveUsers(fileUsers);
+      return;
+    }
+
+    // إذا ماكو ملف users.txt (مثلاً تجربة محلية)، نستخدم التخزين المحلي كما هو
+    let users = loadUsers();
+    if (users.length === 0) {
+      users.push({ username: DEFAULT_ADMIN.username, password: DEFAULT_ADMIN.password, role: 'admin' });
+      saveUsers(users);
+    }
+  }
+
+  // تنزيل ملف users.txt المحدث حتى الأدمن يرفعه على الاستضافة يدوياً
+  function downloadUsersTxt() {
+    const users = loadUsers();
+    const content = usersToTxt(users);
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function setSession(session) {
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+  }
+
+  function clearSession() {
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+  }
+
+  function showAppScreen(session) {
+    document.getElementById('loginCard').style.display = 'none';
+    const appCard = document.getElementById('appCard');
+    appCard.style.display = 'block';
+    document.getElementById('currentUserName').textContent = session.username;
+    const badge = document.getElementById('currentUserRoleBadge');
+    badge.textContent = session.role === 'admin' ? 'أدمن' : 'مستخدم';
+    document.getElementById('openUsersPanelBtn').style.display = session.role === 'admin' ? 'block' : 'none';
+  }
+
+  function showLoginScreen() {
+    document.getElementById('appCard').style.display = 'none';
+    document.getElementById('loginCard').style.display = 'block';
+  }
+
+  let editingUsername = null;
+
+  async function renderUsersTable() {
+    const tbody = document.getElementById('usersTableBody');
+    const users = loadUsers();
+    const session = getSession();
+    tbody.innerHTML = '';
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      if (editingUsername === u.username) {
+        tr.classList.add('editing-row');
+      }
+      const adminCount = users.filter(x => x.role === 'admin').length;
+      const isSelf = session && session.username === u.username;
+      const isLastAdmin = u.role === 'admin' && adminCount <= 1;
+      const canDelete = !isSelf && !isLastAdmin;
+      tr.innerHTML = `
+        <td>${u.username}</td>
+        <td>${u.role === 'admin' ? 'أدمن' : 'مستخدم'}</td>
+        <td class="delete-cell">${canDelete ? '<button type="button" data-username="' + u.username + '">حذف</button>' : '-'}</td>
+      `;
+      tr.addEventListener('dblclick', () => enterUserEditMode(u));
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.delete-cell button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const username = btn.dataset.username;
+        let users = loadUsers();
+        users = users.filter(u => u.username !== username);
+        saveUsers(users);
+        if (editingUsername === username) {
+          exitUserEditMode();
+        }
+        renderUsersTable();
+        populateUsernamesList();
+      });
+    });
+  }
+
+  function enterUserEditMode(user) {
+    editingUsername = user.username;
+    document.getElementById('newUsername').value = user.username;
+    document.getElementById('newUserPassword').value = user.password;
+    document.getElementById('newUserRole').value = user.role;
+    document.getElementById('addUserBtn').textContent = '💾 حفظ التعديل';
+    document.getElementById('addUserBtn').classList.add('editing');
+    document.getElementById('cancelUserEditBtn').style.display = 'block';
+    document.getElementById('usersPanelError').style.display = 'none';
+    renderUsersTable();
+  }
+
+  function exitUserEditMode() {
+    editingUsername = null;
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newUserPassword').value = '';
+    document.getElementById('newUserRole').value = 'user';
+    document.getElementById('addUserBtn').textContent = '+ إضافة مستخدم';
+    document.getElementById('addUserBtn').classList.remove('editing');
+    document.getElementById('cancelUserEditBtn').style.display = 'none';
+    document.getElementById('usersPanelError').style.display = 'none';
+    renderUsersTable();
+  }
+
+  function populateUsernamesList() {
+    const datalist = document.getElementById('usernamesList');
+    if (!datalist) return;
+    const users = loadUsers();
+    datalist.innerHTML = users.map(u => `<option value="${u.username}"></option>`).join('');
+  }
+
+  function initAuthSystem() {
+    ensureDefaultAdmin().then(() => {
+      populateUsernamesList();
+      const session = getSession();
+      if (session) {
+        showAppScreen(session);
+      } else {
+        showLoginScreen();
+      }
+    });
+
+    const loginForm = document.getElementById('loginForm');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginError = document.getElementById('loginError');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginError.style.display = 'none';
+
+      const username = loginUsername.value.trim();
+      const password = loginPassword.value;
+      if (!username || !password) {
+        loginError.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور';
+        loginError.style.display = 'block';
+        return;
+      }
+
+      const users = loadUsers();
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (!user) {
+        loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        loginError.style.display = 'block';
+        loginPassword.value = '';
+        return;
+      }
+
+      const session = { username: user.username, role: user.role };
+      setSession(session);
+      showAppScreen(session);
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      clearSession();
+      location.reload();
+    });
+
+    document.getElementById('openUsersPanelBtn').addEventListener('click', () => {
+      renderUsersTable();
+      document.getElementById('appCard').style.display = 'none';
+      document.getElementById('usersPageCard').style.display = 'block';
+      window.scrollTo(0, 0);
+    });
+
+    document.getElementById('backToAppBtn').addEventListener('click', () => {
+      document.getElementById('usersPageCard').style.display = 'none';
+      document.getElementById('appCard').style.display = 'block';
+      window.scrollTo(0, 0);
+    });
+
+    document.getElementById('addUserBtn').addEventListener('click', async () => {
+      const usernameInput = document.getElementById('newUsername');
+      const passwordInput = document.getElementById('newUserPassword');
+      const roleInput = document.getElementById('newUserRole');
+      const errorBox = document.getElementById('usersPanelError');
+      errorBox.style.display = 'none';
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      const role = roleInput.value;
+
+      if (!username || !password) {
+        errorBox.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      const users = loadUsers();
+
+      if (editingUsername !== null) {
+        // وضع التعديل: تحديث مستخدم موجود
+        const original = users.find(u => u.username === editingUsername);
+        if (!original) { exitUserEditMode(); return; }
+
+        if (username !== editingUsername && users.some(u => u.username === username)) {
+          errorBox.textContent = 'اسم المستخدم موجود مسبقاً';
+          errorBox.style.display = 'block';
+          return;
+        }
+
+        const adminCount = users.filter(u => u.role === 'admin').length;
+        const isLastAdmin = original.role === 'admin' && adminCount <= 1;
+        if (isLastAdmin && role !== 'admin') {
+          errorBox.textContent = 'ما يمكن تغيير دور آخر حساب أدمن متبقي';
+          errorBox.style.display = 'block';
+          return;
+        }
+
+        original.username = username;
+        original.password = password;
+        original.role = role;
+        saveUsers(users);
+
+        // إذا عدّل الأدمن بيانات حسابه هو نفسه، حدّث الجلسة الحالية
+        const session = getSession();
+        if (session && session.username === editingUsername) {
+          setSession({ username: username, role: role });
+          document.getElementById('currentUserName').textContent = username;
+          document.getElementById('currentUserRoleBadge').textContent = role === 'admin' ? 'أدمن' : 'مستخدم';
+        }
+
+        exitUserEditMode();
+        populateUsernamesList();
+        return;
+      }
+
+      if (users.some(u => u.username === username)) {
+        errorBox.textContent = 'اسم المستخدم موجود مسبقاً';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      users.push({ username, password, role });
+      saveUsers(users);
+
+      usernameInput.value = '';
+      passwordInput.value = '';
+      roleInput.value = 'user';
+      renderUsersTable();
+      populateUsernamesList();
+    });
+
+    document.getElementById('cancelUserEditBtn').addEventListener('click', exitUserEditMode);
+
+    document.getElementById('downloadUsersTxtBtn').addEventListener('click', downloadUsersTxt);
+
+    // زر إظهار/إخفاء كلمة المرور
+    document.querySelectorAll('.neu-toggle-pw').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          btn.textContent = '🙈';
+        } else {
+          input.type = 'password';
+          btn.textContent = '👁️';
+        }
+      });
+    });
+  }
+
+  initAuthSystem();
+  // ================= نهاية نظام تسجيل الدخول =================
+  const CONST_FACTOR = 0.70;
+
+  // تقريب أي سعر لأقرب 1000 دينار (مثال: 262,286 تصير 262,000 / 262,700 تصير 263,000)
+  function roundPrice(value) {
+    return Math.round(value / 1000) * 1000;
+  }
+  const PRICE_PER_METER = 170000;
+  const FRAME_PRICE_PER_METER = 50000;
+  const JACK_BOOK_PRICE = 70000;
+
+  // ------- الوضع الليلي / النهاري -------
+  const htmlEl = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+
+  function applyTheme(theme) {
+    htmlEl.setAttribute('data-theme', theme);
+    themeToggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+    try { localStorage.setItem('ad-calc-theme', theme); } catch (e) {}
+  }
+
+  let savedTheme = 'dark';
+  try { savedTheme = localStorage.getItem('ad-calc-theme') || 'dark'; } catch (e) {}
+  applyTheme(savedTheme);
+
+  themeToggle.addEventListener('click', () => {
+    const current = htmlEl.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  // ------- عناصر النموذج -------
+  const newWordHeightInput = document.getElementById('newWordHeight');
+  const newWordWidthInput = document.getElementById('newWordWidth');
+  const newWordQtyInput = document.getElementById('newWordQty');
+  const newWordStrokeInput = document.getElementById('newWordStroke');
+  const newWordBoxInput = document.getElementById('newWordBox');
+  const newWordJackBoxInput = document.getElementById('newWordJackBox');
+  const previewMeters = document.getElementById('previewMeters');
+  const previewPrice = document.getElementById('previewPrice');
+  const addWordBtn = document.getElementById('addWordBtn');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const editingLabel = document.getElementById('editingLabel');
+  const editingLabelNumber = document.getElementById('editingLabelNumber');
+  const wordsTableBody = document.getElementById('wordsTableBody');
+  const wordsSumPrice = document.getElementById('wordsSumPrice');
+  const wordsSumMeters = document.getElementById('wordsSumMeters');
+
+  const newFrameHeightInput = document.getElementById('newFrameHeight');
+  const newFrameWidthInput = document.getElementById('newFrameWidth');
+  const newFrameQtyInput = document.getElementById('newFrameQty');
+  const framePreviewMeters = document.getElementById('framePreviewMeters');
+  const addFrameBtn = document.getElementById('addFrameBtn');
+  const cancelFrameEditBtn = document.getElementById('cancelFrameEditBtn');
+  const frameEditingLabel = document.getElementById('frameEditingLabel');
+  const frameEditingLabelNumber = document.getElementById('frameEditingLabelNumber');
+  const framePreviewPrice = document.getElementById('framePreviewPrice');
+  const framesTableBody = document.getElementById('framesTableBody');
+  const framesSumPrice = document.getElementById('framesSumPrice');
+  const framesSumMeters = document.getElementById('framesSumMeters');
+  const basketPriceInput = document.getElementById('basketPrice');
+  const cranePriceInput = document.getElementById('cranePrice');
+  const basketPriceHint = document.getElementById('basketPriceHint');
+  const cranePriceHint = document.getElementById('cranePriceHint');
+  const metersOut = document.getElementById('meters');
+  const priceOut = document.getElementById('price');
+  const framePriceOut = document.getElementById('framePrice');
+  const totalPriceOut = document.getElementById('totalPrice');
+
+  let wordIdCounter = 0;
+  let words = []; // { id, heightCm, widthCm, stroke, box }
+  let editingWordId = null;
+  let frameIdCounter = 0;
+  let frames = []; // { id, heightCm, widthCm }
+  let editingFrameId = null;
+
+  function updateFramePreview() {
+    const heightCm = parseFloat(newFrameHeightInput.value) || 0;
+    const widthCm = parseFloat(newFrameWidthInput.value) || 0;
+    const qty = parseFloat(newFrameQtyInput.value) || 1;
+
+    const height = heightCm / 100;
+    const width = widthCm / 100;
+
+    let meters = width * height;
+    let framePriceValue = roundPrice(meters * FRAME_PRICE_PER_METER);
+
+    // ضرب النتيجة النهائية بالعدد
+    meters = meters * qty;
+    framePriceValue = framePriceValue * qty;
+
+    framePreviewMeters.textContent = Math.round(meters * 100) / 100;
+    framePreviewPrice.textContent = framePriceValue.toLocaleString('en-US') + ' د.ع';
+  }
+
+  function resetFrameForm() {
+    newFrameHeightInput.value = '';
+    newFrameWidthInput.value = '';
+    newFrameQtyInput.value = '1';
+    updateFramePreview();
+  }
+
+  function exitFrameEditMode() {
+    editingFrameId = null;
+    resetFrameForm();
+    addFrameBtn.textContent = '+ إضافة';
+    addFrameBtn.classList.remove('editing');
+    cancelFrameEditBtn.style.display = 'none';
+    frameEditingLabel.style.display = 'none';
+    renderFramesTable();
+  }
+
+  function enterFrameEditMode(frame, displayIndex) {
+    editingFrameId = frame.id;
+    newFrameHeightInput.value = frame.heightCm;
+    newFrameWidthInput.value = frame.widthCm;
+    newFrameQtyInput.value = frame.qty || 1;
+    addFrameBtn.textContent = '💾 حفظ التعديل';
+    addFrameBtn.classList.add('editing');
+    cancelFrameEditBtn.style.display = 'block';
+    frameEditingLabel.style.display = 'block';
+    frameEditingLabelNumber.textContent = displayIndex;
+    newFrameHeightInput.focus();
+    updateFramePreview();
+    renderFramesTable();
+  }
+
+  function addFrameFromForm() {
+    const heightCm = parseFloat(newFrameHeightInput.value) || 0;
+    const widthCm = parseFloat(newFrameWidthInput.value) || 0;
+    const qty = parseFloat(newFrameQtyInput.value) || 1;
+
+    if (heightCm <= 0 || widthCm <= 0) {
+      alert('يرجى إدخال المعلومات');
+      return;
+    }
+
+    if (editingFrameId !== null) {
+      const frame = frames.find(f => f.id === editingFrameId);
+      if (frame) {
+        frame.heightCm = heightCm;
+        frame.widthCm = widthCm;
+        frame.qty = qty;
+      }
+      exitFrameEditMode();
+    } else {
+      frameIdCounter++;
+      frames.push({ id: frameIdCounter, heightCm: heightCm, widthCm: widthCm, qty: qty });
+      resetFrameForm();
+      newFrameHeightInput.focus();
+      renderFramesTable();
+    }
+
+    calculate();
+  }
+
+  function deleteFrame(id) {
+    frames = frames.filter(f => f.id !== id);
+    if (editingFrameId === id) {
+      exitFrameEditMode();
+    }
+    renderFramesTable();
+    calculate();
+  }
+
+  function renderFramesTable() {
+    framesTableBody.innerHTML = '';
+
+    if (frames.length === 0) {
+      const tr = document.createElement('tr');
+      tr.className = 'empty-row';
+      tr.innerHTML = '<td colspan="7">ما اضفت أي فريم بعد</td>';
+      framesTableBody.appendChild(tr);
+      framesSumPrice.textContent = '0';
+      framesSumMeters.textContent = '0';
+      return;
+    }
+
+    let sumPrice = 0;
+    let sumMeters = 0;
+
+    frames.forEach((f, index) => {
+      const height = f.heightCm / 100;
+      const width = f.widthCm / 100;
+      const qty = f.qty || 1;
+
+      let meters = width * height;
+      let framePriceValue = roundPrice(meters * FRAME_PRICE_PER_METER);
+
+      meters = meters * qty;
+      framePriceValue = framePriceValue * qty;
+
+      sumPrice += framePriceValue;
+      sumMeters += meters;
+
+      const tr = document.createElement('tr');
+      if (f.id === editingFrameId) {
+        tr.classList.add('editing-row');
+      }
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${f.heightCm}</td>
+        <td>${f.widthCm}</td>
+        <td>${qty}</td>
+        <td>${Math.round(meters * 100) / 100}</td>
+        <td>${framePriceValue.toLocaleString('en-US')}</td>
+        <td class="delete-cell"><button type="button" data-id="${f.id}">حذف</button></td>
+      `;
+      tr.addEventListener('dblclick', () => enterFrameEditMode(f, index + 1));
+      tr.querySelector('.delete-cell button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteFrame(f.id);
+      });
+      framesTableBody.appendChild(tr);
+    });
+
+    framesSumPrice.textContent = sumPrice.toLocaleString('en-US');
+    framesSumMeters.textContent = Math.round(sumMeters * 100) / 100;
+  }
+
+  function updatePreview() {
+    const heightCm = parseFloat(newWordHeightInput.value) || 0;
+    const widthCm = parseFloat(newWordWidthInput.value) || 0;
+    const qty = parseFloat(newWordQtyInput.value) || 1;
+
+    const height = heightCm / 100;
+    const width = widthCm / 100;
+
+    let meters = (height / CONST_FACTOR) * width;
+    if (newWordBoxInput.checked) {
+      meters = meters * 1.2;
+    }
+    if (newWordJackBoxInput.checked) {
+      meters = meters * 2;
+    }
+
+    let wordPrice = roundPrice(meters * PRICE_PER_METER);
+    if (newWordStrokeInput.checked) {
+      wordPrice += JACK_BOOK_PRICE;
+    }
+
+    // ضرب النتيجة النهائية بالعدد
+    meters = meters * qty;
+    wordPrice = wordPrice * qty;
+
+    previewMeters.textContent = Math.round(meters * 100) / 100;
+    previewPrice.textContent = wordPrice.toLocaleString('en-US') + ' د.ع';
+  }
+
+  function resetForm() {
+    newWordHeightInput.value = '';
+    newWordWidthInput.value = '';
+    newWordQtyInput.value = '1';
+    newWordStrokeInput.checked = false;
+    newWordBoxInput.checked = false;
+    newWordJackBoxInput.checked = false;
+    updatePreview();
+  }
+
+  function exitEditMode() {
+    editingWordId = null;
+    resetForm();
+    addWordBtn.textContent = '+ إضافة';
+    addWordBtn.classList.remove('editing');
+    cancelEditBtn.style.display = 'none';
+    editingLabel.style.display = 'none';
+    renderWordsTable();
+  }
+
+  function enterEditMode(word, displayIndex) {
+    editingWordId = word.id;
+    newWordHeightInput.value = word.heightCm;
+    newWordWidthInput.value = word.widthCm;
+    newWordQtyInput.value = word.qty || 1;
+    newWordStrokeInput.checked = word.stroke;
+    newWordBoxInput.checked = word.box;
+    newWordJackBoxInput.checked = word.jackBox;
+    addWordBtn.textContent = '💾 حفظ التعديل';
+    addWordBtn.classList.add('editing');
+    cancelEditBtn.style.display = 'block';
+    editingLabel.style.display = 'block';
+    editingLabelNumber.textContent = displayIndex;
+    newWordHeightInput.focus();
+    updatePreview();
+    renderWordsTable();
+  }
+
+  function addWordFromForm() {
+    const heightCm = parseFloat(newWordHeightInput.value) || 0;
+    const widthCm = parseFloat(newWordWidthInput.value) || 0;
+    const qty = parseFloat(newWordQtyInput.value) || 1;
+
+    if (heightCm <= 0 || widthCm <= 0) {
+      alert('يرجى إدخال المعلومات');
+      return;
+    }
+
+    if (editingWordId !== null) {
+      const word = words.find(w => w.id === editingWordId);
+      if (word) {
+        word.heightCm = heightCm;
+        word.widthCm = widthCm;
+        word.qty = qty;
+        word.stroke = newWordStrokeInput.checked;
+        word.box = newWordBoxInput.checked;
+        word.jackBox = newWordJackBoxInput.checked;
+      }
+      exitEditMode();
+    } else {
+      wordIdCounter++;
+      words.push({
+        id: wordIdCounter,
+        heightCm: heightCm,
+        widthCm: widthCm,
+        qty: qty,
+        stroke: newWordStrokeInput.checked,
+        box: newWordBoxInput.checked,
+        jackBox: newWordJackBoxInput.checked
+      });
+      resetForm();
+      newWordHeightInput.focus();
+      renderWordsTable();
+    }
+
+    calculate();
+  }
+
+  function deleteWord(id) {
+    words = words.filter(w => w.id !== id);
+    if (editingWordId === id) {
+      exitEditMode();
+    }
+    renderWordsTable();
+    calculate();
+  }
+
+  function renderWordsTable() {
+    wordsTableBody.innerHTML = '';
+
+    if (words.length === 0) {
+      const tr = document.createElement('tr');
+      tr.className = 'empty-row';
+      tr.innerHTML = '<td colspan="10">ما اضفت أي كلمة بعد</td>';
+      wordsTableBody.appendChild(tr);
+      wordsSumPrice.textContent = '0';
+      wordsSumMeters.textContent = '0';
+      return;
+    }
+
+    let sumPrice = 0;
+    let sumMeters = 0;
+
+    words.forEach((w, index) => {
+      const height = w.heightCm / 100;
+      const width = w.widthCm / 100;
+      const qty = w.qty || 1;
+
+      let meters = (height / CONST_FACTOR) * width;
+      if (w.box) {
+        meters = meters * 1.2;
+      }
+      if (w.jackBox) {
+        meters = meters * 2;
+      }
+
+      let wordPrice = roundPrice(meters * PRICE_PER_METER);
+      if (w.stroke) {
+        wordPrice += JACK_BOOK_PRICE;
+      }
+
+      meters = meters * qty;
+      wordPrice = wordPrice * qty;
+
+      sumPrice += wordPrice;
+      sumMeters += meters;
+
+      const tr = document.createElement('tr');
+      if (w.id === editingWordId) {
+        tr.classList.add('editing-row');
+      }
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${w.heightCm}</td>
+        <td>${w.widthCm}</td>
+        <td>${qty}</td>
+        <td>${w.stroke ? '✔' : '-'}</td>
+        <td>${w.box ? '✔' : '-'}</td>
+        <td>${w.jackBox ? '✔' : '-'}</td>
+        <td>${Math.round(meters * 100) / 100}</td>
+        <td>${wordPrice.toLocaleString('en-US')}</td>
+        <td class="delete-cell"><button type="button" data-id="${w.id}">حذف</button></td>
+      `;
+      tr.addEventListener('dblclick', () => enterEditMode(w, index + 1));
+      tr.querySelector('.delete-cell button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteWord(w.id);
+      });
+      wordsTableBody.appendChild(tr);
+    });
+
+    wordsSumPrice.textContent = sumPrice.toLocaleString('en-US');
+    wordsSumMeters.textContent = Math.round(sumMeters * 100) / 100;
+  }
+
+  function calculate() {
+    let totalMeters = 0;
+    let totalWordsPrice = 0;
+
+    words.forEach(w => {
+      const height = w.heightCm / 100;
+      const width = w.widthCm / 100;
+      const qty = w.qty || 1;
+
+      let meters = (height / CONST_FACTOR) * width;
+      if (w.box) {
+        meters = meters * 1.2;
+      }
+      if (w.jackBox) {
+        meters = meters * 2;
+      }
+
+      let wordPrice = roundPrice(meters * PRICE_PER_METER);
+      if (w.stroke) {
+        wordPrice += JACK_BOOK_PRICE;
+      }
+
+      meters = meters * qty;
+      wordPrice = wordPrice * qty;
+
+      totalMeters += meters;
+      totalWordsPrice += wordPrice;
+    });
+
+    let price = totalWordsPrice;
+
+    let totalFramePrice = 0;
+    frames.forEach(f => {
+      const height = f.heightCm / 100;
+      const width = f.widthCm / 100;
+      const qty = f.qty || 1;
+      totalFramePrice += roundPrice(width * height * FRAME_PRICE_PER_METER) * qty;
+    });
+
+    const basketPrice = (parseFloat(basketPriceInput.value) || 0) * 1000;
+    const cranePrice = (parseFloat(cranePriceInput.value) || 0) * 1000;
+
+    basketPriceHint.textContent = '= ' + basketPrice.toLocaleString('en-US') + ' د.ع';
+    cranePriceHint.textContent = '= ' + cranePrice.toLocaleString('en-US') + ' د.ع';
+
+    const total = price + totalFramePrice + basketPrice + cranePrice;
+
+    metersOut.textContent = Math.round(totalMeters * 100) / 100;
+    priceOut.textContent = price.toLocaleString('en-US');
+    framePriceOut.textContent = totalFramePrice.toLocaleString('en-US');
+    totalPriceOut.textContent = total.toLocaleString('en-US') + ' د.ع';
+  }
+
+  addWordBtn.addEventListener('click', addWordFromForm);
+  cancelEditBtn.addEventListener('click', exitEditMode);
+  addFrameBtn.addEventListener('click', addFrameFromForm);
+  cancelFrameEditBtn.addEventListener('click', exitFrameEditMode);
+  basketPriceInput.addEventListener('input', calculate);
+  cranePriceInput.addEventListener('input', calculate);
+
+  newWordHeightInput.addEventListener('input', updatePreview);
+  newWordWidthInput.addEventListener('input', updatePreview);
+  newWordQtyInput.addEventListener('input', updatePreview);
+  newWordStrokeInput.addEventListener('change', updatePreview);
+  newWordBoxInput.addEventListener('change', updatePreview);
+  newWordJackBoxInput.addEventListener('change', updatePreview);
+  updatePreview();
+
+  newFrameHeightInput.addEventListener('input', updateFramePreview);
+  newFrameWidthInput.addEventListener('input', updateFramePreview);
+  newFrameQtyInput.addEventListener('input', updateFramePreview);
+  updateFramePreview();
+  renderFramesTable();
+
+  calculate();
+
+  // ------- تصدير PDF -------
+  const pdfExportArea = document.getElementById('pdfExportArea');
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  let logoDataUrl = '';
+
+  // تحويل الشعار إلى base64 مسبقاً لتفادي مشاكل CORS أثناء تصدير PDF
+  (async function preloadLogo() {
+    try {
+      const response = await fetch('icon-512.png');
+      const blob = await response.blob();
+      logoDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      logoDataUrl = '';
+    }
+  })();
+
+  function buildPdfSections() {
+    const thStyle = 'background:#1c1e22; color:#fff; padding:9px 6px; font-size:11.5px; text-align:center;';
+    const rowTdStyle = 'padding:8px 6px; text-align:center; border-bottom:1px solid #eee; font-size:12px;';
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB') + '  ' + now.toLocaleTimeString('en-GB');
+
+    let wordsRowsHtml = '';
+    let sumWordsPrice = 0;
+    let sumWordsMeters = 0;
+
+    if (words.length === 0) {
+      wordsRowsHtml = `<tr><td colspan="9" style="padding:14px; text-align:center; color:#999;">لا توجد كلمات مضافة</td></tr>`;
+    } else {
+      words.forEach((w, index) => {
+        const height = w.heightCm / 100;
+        const width = w.widthCm / 100;
+        const qty = w.qty || 1;
+        let meters = (height / CONST_FACTOR) * width;
+        if (w.box) meters = meters * 1.2;
+        if (w.jackBox) meters = meters * 2;
+        let wordPrice = roundPrice(meters * PRICE_PER_METER);
+        if (w.stroke) wordPrice += JACK_BOOK_PRICE;
+
+        meters = meters * qty;
+        wordPrice = wordPrice * qty;
+
+        sumWordsMeters += meters;
+        sumWordsPrice += wordPrice;
+
+        wordsRowsHtml += `
+          <tr>
+            <td style="${rowTdStyle}">${index + 1}</td>
+            <td style="${rowTdStyle}">${w.heightCm}</td>
+            <td style="${rowTdStyle}">${w.widthCm}</td>
+            <td style="${rowTdStyle}">${qty}</td>
+            <td style="${rowTdStyle}">${w.stroke ? 'نعم' : '-'}</td>
+            <td style="${rowTdStyle}">${w.box ? 'نعم' : '-'}</td>
+            <td style="${rowTdStyle}">${w.jackBox ? 'نعم' : '-'}</td>
+            <td style="${rowTdStyle}">${Math.round(meters * 100) / 100}</td>
+            <td style="${rowTdStyle}">${wordPrice.toLocaleString('en-US')}</td>
+          </tr>`;
+      });
+    }
+
+    let framesRowsHtml = '';
+    let sumFramesPrice = 0;
+    let sumFramesMeters = 0;
+
+    if (frames.length === 0) {
+      framesRowsHtml = `<tr><td colspan="6" style="padding:14px; text-align:center; color:#999;">لا توجد فريمات مضافة</td></tr>`;
+    } else {
+      frames.forEach((f, index) => {
+        const height = f.heightCm / 100;
+        const width = f.widthCm / 100;
+        const qty = f.qty || 1;
+
+        let meters = width * height;
+        let framePriceValue = roundPrice(meters * FRAME_PRICE_PER_METER);
+
+        meters = meters * qty;
+        framePriceValue = framePriceValue * qty;
+
+        sumFramesPrice += framePriceValue;
+        sumFramesMeters += meters;
+
+        framesRowsHtml += `
+          <tr>
+            <td style="${rowTdStyle}">${index + 1}</td>
+            <td style="${rowTdStyle}">${f.heightCm}</td>
+            <td style="${rowTdStyle}">${f.widthCm}</td>
+            <td style="${rowTdStyle}">${qty}</td>
+            <td style="${rowTdStyle}">${Math.round(meters * 100) / 100}</td>
+            <td style="${rowTdStyle}">${framePriceValue.toLocaleString('en-US')}</td>
+          </tr>`;
+      });
+    }
+
+    const basketPrice = (parseFloat(basketPriceInput.value) || 0) * 1000;
+    const cranePrice = (parseFloat(cranePriceInput.value) || 0) * 1000;
+    const grandTotal = sumWordsPrice + sumFramesPrice + basketPrice + cranePrice;
+
+    const tdStyle = 'padding:8px 6px; text-align:center; border-bottom:1px solid #eee; font-size:12px;';
+    const totalRowStyle = 'padding:9px 6px; text-align:center; font-size:12.5px; font-weight:bold; background:#f3e6cf; color:#000; border-top:2px solid #d9a253;';
+    const tableWrapStyle = 'border:1px solid #e2e2e2; border-radius:8px; overflow:hidden;';
+    const sectionTitleStyle = 'font-size:14px; font-weight:bold; margin:0 0 10px; border-right:4px solid #d9a253; padding-right:8px;';
+
+    // القسم 1: الترويسة (شعار + عنوان + تاريخ)
+    const headerSection = `
+      <div style="text-align:center;">
+        ${logoDataUrl ? `<img src="${logoDataUrl}" style="width:60px; height:60px; border-radius:12px; margin-bottom:8px;">` : ''}
+        <div style="font-size:20px; font-weight:bold; color:#1a1a1a;">برنامج تسعير الإعلان</div>
+        <div style="font-size:10.5px; color:#888; margin-top:4px;">تاريخ التصدير: ${dateStr}</div>
+        <div style="font-size:10.5px; color:#888; margin-top:2px;">بواسطة: ${(getSession() && getSession().username) || "-"}</div>
+        <div style="height:3px; background:#d9a253; width:100%; margin-top:14px; border-radius:2px;"></div>
+      </div>`;
+
+    // القسم 2: جدول كلمات الإعلان
+    const wordsSection = `
+      <div style="${sectionTitleStyle} text-align:center;">كلمات الإعلان</div>
+      <div style="${tableWrapStyle}">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="${thStyle}">ت</th>
+              <th style="${thStyle}">الارتفاع</th>
+              <th style="${thStyle}">العرض</th>
+              <th style="${thStyle}">العدد</th>
+              <th style="${thStyle}">ستروك</th>
+              <th style="${thStyle}">بوكس</th>
+              <th style="${thStyle}">وجهين</th>
+              <th style="${thStyle}">الأمتار</th>
+              <th style="${thStyle}">السعر</th>
+            </tr>
+          </thead>
+          <tbody>${wordsRowsHtml}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="7" style="${totalRowStyle}">المجموع</td>
+              <td style="${totalRowStyle}">${Math.round(sumWordsMeters * 100) / 100}</td>
+              <td style="${totalRowStyle}">${sumWordsPrice.toLocaleString('en-US')}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>`;
+
+    // القسم 3: جدول الفريمات
+    const framesSection = `
+      <div style="${sectionTitleStyle} text-align:center;">الفريمات</div>
+      <div style="${tableWrapStyle}">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="${thStyle}">ت</th>
+              <th style="${thStyle}">الارتفاع</th>
+              <th style="${thStyle}">العرض</th>
+              <th style="${thStyle}">العدد</th>
+              <th style="${thStyle}">الأمتار</th>
+              <th style="${thStyle}">السعر</th>
+            </tr>
+          </thead>
+          <tbody>${framesRowsHtml}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" style="${totalRowStyle}">المجموع</td>
+              <td style="${totalRowStyle}">${Math.round(sumFramesMeters * 100) / 100}</td>
+              <td style="${totalRowStyle}">${sumFramesPrice.toLocaleString('en-US')}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>`;
+
+    // القسم 4: أسعار إضافية + المجموع الكلي + التوقيع
+    const summarySection = `
+      <div style="${sectionTitleStyle} text-align:center;">أسعار إضافية</div>
+      <div style="${tableWrapStyle}">
+        <table style="width:100%; border-collapse:collapse;">
+          <tbody>
+            <tr>
+              <td style="${tdStyle}">سعر الباسكت</td>
+              <td style="${tdStyle}">${basketPrice.toLocaleString('en-US')} د.ع</td>
+            </tr>
+            <tr>
+              <td style="${tdStyle} border-bottom:none;">سعر الرافعة</td>
+              <td style="${tdStyle} border-bottom:none;">${cranePrice.toLocaleString('en-US')} د.ع</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:18px; background:#f3e6cf; border:2px solid #d9a253; border-radius:10px; padding:16px; text-align:center;">
+        <div style="font-size:13px; color:#555; margin-bottom:6px;">المجموع الكلي</div>
+        <div style="font-size:24px; font-weight:bold; color:#000;">${grandTotal.toLocaleString('en-US')} د.ع</div>
+      </div>
+
+      <div style="text-align:center; margin-top:18px; font-size:10.5px; color:#999;">Design &amp; Development by Aleem Al-Ibrahimi</div>`;
+
+    return [headerSection, wordsSection, framesSection, summarySection];
+  }
+
+  async function exportToPDF() {
+    if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+      alert('تعذر تحميل مكتبة تصدير PDF. تأكد من وجود اتصال بالإنترنت وحاول مرة أخرى.');
+      return;
+    }
+
+    const basketVal = parseFloat(basketPriceInput.value) || 0;
+    const craneVal = parseFloat(cranePriceInput.value) || 0;
+
+    if (words.length === 0 && frames.length === 0 && basketVal === 0 && craneVal === 0) {
+      alert('لا توجد معلومات، يرجى إدخال المعلومات');
+      return;
+    }
+
+    exportPdfBtn.disabled = true;
+    exportPdfBtn.textContent = '... جاري التصدير';
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();   // 595.28pt
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 841.89pt
+      const marginX = 40;
+      const marginTop = 36;
+      const marginBottom = 46; // مساحة إضافية بالأسفل لرقم الصفحة
+      const contentWidth = pageWidth - marginX * 2;
+      const sectionGap = 14;
+
+      const sections = buildPdfSections();
+      let cursorY = marginTop;
+      let pageCount = 1;
+      const renderedPages = [];
+
+      for (let i = 0; i < sections.length; i++) {
+        pdfExportArea.innerHTML = sections[i];
+        await new Promise(resolve => setTimeout(resolve, 30));
+
+        const canvas = await html2canvas(pdfExportArea, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          allowTaint: false,
+          logging: false
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        const availableHeight = pageHeight - marginBottom - cursorY;
+
+        if (imgHeight <= (pageHeight - marginTop - marginBottom)) {
+          // القسم يدخل بصفحة وحدة: إذا ما يكفي المتبقي من الصفحة الحالية، افتح صفحة جديدة
+          if (imgHeight > availableHeight && cursorY > marginTop) {
+            pdf.addPage();
+            pageCount++;
+            cursorY = marginTop;
+          }
+          pdf.addImage(imgData, 'PNG', marginX, cursorY, contentWidth, imgHeight);
+          cursorY += imgHeight + sectionGap;
+        } else {
+          // القسم أطول من صفحة وحدة (مثلاً جدول طويل جداً): نقسمه على أكثر من صفحة بدون قص المحتوى بمنتصف الصف
+          if (cursorY > marginTop) {
+            pdf.addPage();
+            pageCount++;
+            cursorY = marginTop;
+          }
+          const usableHeight = pageHeight - marginTop - marginBottom;
+          let heightLeft = imgHeight;
+          let renderedHeight = 0;
+
+          while (heightLeft > 0) {
+            const sliceHeight = Math.min(usableHeight, heightLeft);
+            pdf.addImage(
+              imgData, 'PNG',
+              marginX, cursorY - renderedHeight,
+              contentWidth, imgHeight
+            );
+            renderedHeight += sliceHeight;
+            heightLeft -= sliceHeight;
+
+            if (heightLeft > 0) {
+              pdf.addPage();
+              pageCount++;
+              cursorY = marginTop;
+            } else {
+              cursorY = marginTop + sliceHeight + sectionGap;
+            }
+          }
+        }
+      }
+
+      // أرقام الصفحات بأسفل كل صفحة
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        pdf.setPage(p);
+        pdf.setFontSize(9);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`${p} / ${totalPages}`, pageWidth / 2, pageHeight - 20, { align: 'center' });
+      }
+
+      pdf.save('تسعير-الاعلان.pdf');
+    } catch (err) {
+      console.error(err);
+      alert('صار خطأ أثناء توليد ملف PDF:\n' + (err && err.message ? err.message : err) + '\nحاول مرة أخرى.');
+    } finally {
+      exportPdfBtn.disabled = false;
+      exportPdfBtn.textContent = '📄 تصدير PDF';
+    }
+  }
+
+  exportPdfBtn.addEventListener('click', exportToPDF);
+
+  // ------- تفريغ كل المعلومات -------
+  const clearAllBtn = document.getElementById('clearAllBtn');
+
+  function clearAllData() {
+    const hasData = words.length > 0 || frames.length > 0 ||
+      (parseFloat(basketPriceInput.value) || 0) > 0 ||
+      (parseFloat(cranePriceInput.value) || 0) > 0;
+
+    if (!hasData) {
+      alert('لا توجد معلومات لتفريغها');
+      return;
+    }
+
+    const confirmed = confirm('هل أنت متأكد إنك تريد تفريغ كل المعلومات؟ هذا الإجراء ما يمكن التراجع عنه.');
+    if (!confirmed) return;
+
+    words = [];
+    frames = [];
+
+    exitEditMode();
+    exitFrameEditMode();
+
+    basketPriceInput.value = '';
+    cranePriceInput.value = '';
+
+    updatePreview();
+    updateFramePreview();
+    calculate();
+  }
+
+  clearAllBtn.addEventListener('click', clearAllData);
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
