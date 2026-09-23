@@ -1087,7 +1087,8 @@
       </div>
 
       <div class="hint-text" style="max-width:420px; margin:16px auto 0;">
-        بعد إضافة أو تعديل أو حذف أي مستخدم، اضغط الزر تحت حتى تحمّل ملف <b>users.txt</b> المحدث، وبعدين ارفعه (استبدل القديم) على استضافتك (مثل GitHub) حتى يشوف كل زائر جديد نفس التحديث.
+        <span id="syncStatusText">إذا فعّلت JSONBin، كل تعديل ينتشر تلقائياً لكل الزوار بدون أي خطوة إضافية.</span>
+        <span id="syncFallbackText" style="display:none;">بعد إضافة أو تعديل أو حذف أي مستخدم، اضغط الزر تحت حتى تحمّل ملف <b>users.txt</b> المحدث، وبعدين ارفعه (استبدل القديم) على استضافتك (مثل GitHub) حتى يشوف كل زائر جديد نفس التحديث.</span>
       </div>
       <div style="max-width:420px; margin:10px auto 0;">
         <button type="button" class="add-word-btn" id="downloadUsersTxtBtn" style="background:transparent; border:1.5px solid var(--gold); color:var(--gold); box-shadow:none;">⬇️ تنزيل ملف users.txt المحدث</button>
@@ -1103,6 +1104,12 @@
   const USERS_KEY = 'adcalc_users_v2';
   const SESSION_KEY = 'adcalc_session_v2';
   const DEFAULT_ADMIN = { username: 'admin', password: 'Aleem2026' };
+
+  // ===== إعدادات JSONBin.io لمزامنة المستخدمين تلقائياً بين كل الأجهزة =====
+  // عبّي هالقيمتين بعد ما تسوي حساب مجاني على jsonbin.io وتنشئ Bin جديد
+  const JSONBIN_BIN_ID = 'YOUR_BIN_ID_HERE';
+  const JSONBIN_API_KEY = 'YOUR_MASTER_KEY_HERE';
+  const JSONBIN_ENABLED = JSONBIN_BIN_ID !== 'YOUR_BIN_ID_HERE' && JSONBIN_API_KEY !== 'YOUR_MASTER_KEY_HERE';
 
 
   function loadUsers() {
@@ -1146,19 +1153,68 @@
     }
   }
 
+  // قراءة قائمة المستخدمين من JSONBin (المصدر المشترك المباشر بين كل الأجهزة)
+  async function loadUsersFromJsonBin() {
+    if (!JSONBIN_ENABLED) return null;
+    try {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        headers: { 'X-Master-Key': JSONBIN_API_KEY }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const users = data && data.record;
+      return Array.isArray(users) && users.length > 0 ? users : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // كتابة قائمة المستخدمين إلى JSONBin حتى تصير التحديثات تلقائية للجميع
+  let jsonBinSyncTimer = null;
+  async function syncUsersToJsonBin(users) {
+    if (!JSONBIN_ENABLED) return;
+    try {
+      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_API_KEY
+        },
+        body: JSON.stringify(users)
+      });
+    } catch (e) {
+      console.error('تعذرت مزامنة المستخدمين مع JSONBin:', e);
+    }
+  }
+
+  // نداء موحّد: يحفظ محلياً فوراً + يزامن مع JSONBin بالخلفية (بدون ما يعطّل الواجهة)
+  function saveUsersAndSync(users) {
+    saveUsers(users);
+    syncUsersToJsonBin(users);
+  }
+
   async function ensureDefaultAdmin() {
-    // أولاً نحاول نجيب المستخدمين من ملف users.txt المشترك (لو موجود على الاستضافة)
-    const fileUsers = await loadUsersFromTxtFile();
-    if (fileUsers) {
-      saveUsers(fileUsers);
+    // أولاً: نحاول نجيب المستخدمين من JSONBin (تحديث تلقائي حقيقي بين كل الأجهزة)
+    const cloudUsers = await loadUsersFromJsonBin();
+    if (cloudUsers) {
+      saveUsers(cloudUsers);
       return;
     }
 
-    // إذا ماكو ملف users.txt (مثلاً تجربة محلية)، نستخدم التخزين المحلي كما هو
+    // ثانياً: نحاول نجيب المستخدمين من ملف users.txt المشترك (لو موجود على الاستضافة)
+    const fileUsers = await loadUsersFromTxtFile();
+    if (fileUsers) {
+      saveUsers(fileUsers);
+      if (JSONBIN_ENABLED) syncUsersToJsonBin(fileUsers);
+      return;
+    }
+
+    // إذا ماكو JSONBin ولا ملف users.txt (مثلاً تجربة محلية)، نستخدم التخزين المحلي كما هو
     let users = loadUsers();
     if (users.length === 0) {
       users.push({ username: DEFAULT_ADMIN.username, password: DEFAULT_ADMIN.password, role: 'admin' });
       saveUsers(users);
+      if (JSONBIN_ENABLED) syncUsersToJsonBin(users);
     }
   }
 
@@ -1177,19 +1233,21 @@
     URL.revokeObjectURL(url);
   }
 
+  // نستخدم sessionStorage بدل localStorage حتى تسجيل الدخول ينمسح تلقائياً
+  // إذا المستخدم سكر التبويب/المتصفح وفتحه من جديد (يطلب تسجيل دخول من جديد دائماً)
   function getSession() {
     try {
-      const raw = localStorage.getItem(SESSION_KEY);
+      const raw = sessionStorage.getItem(SESSION_KEY);
       return raw ? JSON.parse(raw) : null;
     } catch (e) { return null; }
   }
 
   function setSession(session) {
-    try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
   }
 
   function clearSession() {
-    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
   }
 
   function showAppScreen(session) {
@@ -1238,7 +1296,7 @@
         const username = btn.dataset.username;
         let users = loadUsers();
         users = users.filter(u => u.username !== username);
-        saveUsers(users);
+        saveUsersAndSync(users);
         if (editingUsername === username) {
           exitUserEditMode();
         }
@@ -1381,7 +1439,7 @@
         original.username = username;
         original.password = password;
         original.role = role;
-        saveUsers(users);
+        saveUsersAndSync(users);
 
         // إذا عدّل الأدمن بيانات حسابه هو نفسه، حدّث الجلسة الحالية
         const session = getSession();
@@ -1403,7 +1461,7 @@
       }
 
       users.push({ username, password, role });
-      saveUsers(users);
+      saveUsersAndSync(users);
 
       usernameInput.value = '';
       passwordInput.value = '';
@@ -1415,6 +1473,10 @@
     document.getElementById('cancelUserEditBtn').addEventListener('click', exitUserEditMode);
 
     document.getElementById('downloadUsersTxtBtn').addEventListener('click', downloadUsersTxt);
+
+    // إظهار النص المناسب حسب تفعيل JSONBin من عدمه
+    document.getElementById('syncStatusText').style.display = JSONBIN_ENABLED ? 'inline' : 'none';
+    document.getElementById('syncFallbackText').style.display = JSONBIN_ENABLED ? 'none' : 'inline';
 
     // زر إظهار/إخفاء كلمة المرور
     document.querySelectorAll('.neu-toggle-pw').forEach(btn => {
