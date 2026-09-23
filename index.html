@@ -585,6 +585,60 @@
   .neu-input-wrap input[type="text"].pw-visible {
     padding-left: 18px;
   }
+
+  .neu-input-wrap .neu-dropdown-arrow {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    font-size: 13px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 6px;
+    line-height: 1;
+    color: var(--gold);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .neu-input-wrap .neu-dropdown-arrow:hover { opacity: 1; }
+  .neu-input-wrap .neu-dropdown-arrow.open { transform: translateY(-50%) rotate(180deg); }
+
+  .username-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--neu-bg);
+    border-radius: 14px;
+    box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
+    z-index: 20;
+    padding: 6px;
+  }
+  .username-dropdown.open { display: block; }
+  .username-dropdown .username-option {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-main);
+    cursor: pointer;
+    text-align: right;
+    transition: background 0.15s;
+  }
+  .username-dropdown .username-option:hover,
+  .username-dropdown .username-option.active {
+    background: var(--gold-soft);
+    color: var(--gold);
+  }
+  .username-dropdown .username-empty {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-sub);
+    text-align: center;
+  }
   .login-card input,
   .add-user-card input {
     width: 100%;
@@ -835,10 +889,10 @@
     <h2>تسجيل الدخول</h2>
     <p>أدخل اسم المستخدم وكلمة المرور للمتابعة</p>
     <form id="loginForm">
-      <div class="neu-input-wrap">
-        <input type="text" id="loginUsername" placeholder="اسم المستخدم" autocomplete="off" list="usernamesList">
-        <datalist id="usernamesList"></datalist>
-        <span class="neu-icon">👤</span>
+      <div class="neu-input-wrap" id="usernameFieldWrap">
+        <input type="text" id="loginUsername" placeholder="اسم المستخدم" autocomplete="off">
+        <button type="button" class="neu-dropdown-arrow" id="usernameDropdownArrow" title="عرض كل المستخدمين">▾</button>
+        <div class="username-dropdown" id="usernameDropdown"></div>
       </div>
       <div class="neu-input-wrap">
         <input type="password" id="loginPassword" placeholder="كلمة المرور" autocomplete="off">
@@ -903,6 +957,7 @@
           <div class="live-preview">
             <div class="lp-row"><span>عدد الأمتار</span><span id="previewMeters">0</span></div>
             <div class="lp-row"><span>السعر</span><span id="previewPrice">0</span></div>
+            <div class="lp-row"><span>سعر الكلفة</span><span id="previewCost">0</span></div>
           </div>
 
           <button type="button" class="add-word-btn" id="addWordBtn">+ إضافة</button>
@@ -922,12 +977,13 @@
                 <th>وجهين</th>
                 <th>الأمتار</th>
                 <th>السعر</th>
+                <th>الكلفة</th>
                 <th>حذف</th>
               </tr>
             </thead>
             <tbody id="wordsTableBody">
               <tr class="empty-row">
-                <td colspan="10">ما اضفت أي كلمة بعد</td>
+                <td colspan="11">ما اضفت أي كلمة بعد</td>
               </tr>
             </tbody>
             <tfoot>
@@ -935,6 +991,7 @@
                 <td colspan="7">المجموع</td>
                 <td id="wordsSumMeters">0</td>
                 <td id="wordsSumPrice">0</td>
+                <td id="wordsSumCost">0</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -1331,10 +1388,28 @@
   }
 
   function populateUsernamesList() {
-    const datalist = document.getElementById('usernamesList');
-    if (!datalist) return;
+    const dropdown = document.getElementById('usernameDropdown');
+    if (!dropdown) return;
     const users = loadUsers();
-    datalist.innerHTML = users.map(u => `<option value="${u.username}"></option>`).join('');
+    if (users.length === 0) {
+      dropdown.innerHTML = '<div class="username-empty">لا يوجد مستخدمون بعد</div>';
+      return;
+    }
+    dropdown.innerHTML = users.map(u =>
+      `<div class="username-option" data-username="${u.username}">${u.username}</div>`
+    ).join('');
+  }
+
+  // يفتح القائمة المنسدلة ويعرض كل المستخدمين دائماً (بدون فلترة)، حتى لو كان الحقل فيه اسم مختار مسبقاً
+  function openUsernameDropdown() {
+    populateUsernamesList();
+    document.getElementById('usernameDropdown').classList.add('open');
+    document.getElementById('usernameDropdownArrow').classList.add('open');
+  }
+
+  function closeUsernameDropdown() {
+    document.getElementById('usernameDropdown').classList.remove('open');
+    document.getElementById('usernameDropdownArrow').classList.remove('open');
   }
 
   function initAuthSystem() {
@@ -1352,6 +1427,35 @@
     const loginUsername = document.getElementById('loginUsername');
     const loginPassword = document.getElementById('loginPassword');
     const loginError = document.getElementById('loginError');
+
+    // فتح القائمة المنسدلة الكاملة عند الضغط على الحقل أو زر السهم، حتى لو فيه اسم مختار من قبل
+    loginUsername.addEventListener('focus', openUsernameDropdown);
+    loginUsername.addEventListener('click', openUsernameDropdown);
+    document.getElementById('usernameDropdownArrow').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dropdown = document.getElementById('usernameDropdown');
+      if (dropdown.classList.contains('open')) {
+        closeUsernameDropdown();
+      } else {
+        openUsernameDropdown();
+        loginUsername.focus();
+      }
+    });
+
+    document.getElementById('usernameDropdown').addEventListener('click', (e) => {
+      const option = e.target.closest('.username-option');
+      if (!option) return;
+      loginUsername.value = option.dataset.username;
+      closeUsernameDropdown();
+      loginPassword.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('usernameFieldWrap');
+      if (wrap && !wrap.contains(e.target)) {
+        closeUsernameDropdown();
+      }
+    });
 
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1504,6 +1608,7 @@
     return Math.round(value / 1000) * 1000;
   }
   const PRICE_PER_METER = 170000;
+  const COST_PRICE_PER_METER = 75000;
   const FRAME_PRICE_PER_METER = 50000;
   const JACK_BOOK_PRICE = 70000;
 
@@ -1535,12 +1640,14 @@
   const newWordJackBoxInput = document.getElementById('newWordJackBox');
   const previewMeters = document.getElementById('previewMeters');
   const previewPrice = document.getElementById('previewPrice');
+  const previewCost = document.getElementById('previewCost');
   const addWordBtn = document.getElementById('addWordBtn');
   const cancelEditBtn = document.getElementById('cancelEditBtn');
   const editingLabel = document.getElementById('editingLabel');
   const editingLabelNumber = document.getElementById('editingLabelNumber');
   const wordsTableBody = document.getElementById('wordsTableBody');
   const wordsSumPrice = document.getElementById('wordsSumPrice');
+  const wordsSumCost = document.getElementById('wordsSumCost');
   const wordsSumMeters = document.getElementById('wordsSumMeters');
 
   const newFrameHeightInput = document.getElementById('newFrameHeight');
@@ -1736,12 +1843,16 @@
       wordPrice += JACK_BOOK_PRICE;
     }
 
+    let costPrice = roundPrice(meters * COST_PRICE_PER_METER);
+
     // ضرب النتيجة النهائية بالعدد
     meters = meters * qty;
     wordPrice = wordPrice * qty;
+    costPrice = costPrice * qty;
 
     previewMeters.textContent = Math.round(meters * 100) / 100;
     previewPrice.textContent = wordPrice.toLocaleString('en-US') + ' د.ع';
+    previewCost.textContent = costPrice.toLocaleString('en-US') + ' د.ع';
   }
 
   function resetForm() {
@@ -1837,15 +1948,17 @@
     if (words.length === 0) {
       const tr = document.createElement('tr');
       tr.className = 'empty-row';
-      tr.innerHTML = '<td colspan="10">ما اضفت أي كلمة بعد</td>';
+      tr.innerHTML = '<td colspan="11">ما اضفت أي كلمة بعد</td>';
       wordsTableBody.appendChild(tr);
       wordsSumPrice.textContent = '0';
       wordsSumMeters.textContent = '0';
+      wordsSumCost.textContent = '0';
       return;
     }
 
     let sumPrice = 0;
     let sumMeters = 0;
+    let sumCost = 0;
 
     words.forEach((w, index) => {
       const height = w.heightCm / 100;
@@ -1865,11 +1978,15 @@
         wordPrice += JACK_BOOK_PRICE;
       }
 
+      let costPrice = roundPrice(meters * COST_PRICE_PER_METER);
+
       meters = meters * qty;
       wordPrice = wordPrice * qty;
+      costPrice = costPrice * qty;
 
       sumPrice += wordPrice;
       sumMeters += meters;
+      sumCost += costPrice;
 
       const tr = document.createElement('tr');
       if (w.id === editingWordId) {
@@ -1885,6 +2002,7 @@
         <td>${w.jackBox ? '✔' : '-'}</td>
         <td>${Math.round(meters * 100) / 100}</td>
         <td>${wordPrice.toLocaleString('en-US')}</td>
+        <td>${costPrice.toLocaleString('en-US')}</td>
         <td class="delete-cell"><button type="button" data-id="${w.id}">حذف</button></td>
       `;
       tr.addEventListener('dblclick', () => enterEditMode(w, index + 1));
@@ -1897,6 +2015,7 @@
 
     wordsSumPrice.textContent = sumPrice.toLocaleString('en-US');
     wordsSumMeters.textContent = Math.round(sumMeters * 100) / 100;
+    wordsSumCost.textContent = sumCost.toLocaleString('en-US');
   }
 
   function calculate() {
@@ -2006,9 +2125,10 @@
     let wordsRowsHtml = '';
     let sumWordsPrice = 0;
     let sumWordsMeters = 0;
+    let sumWordsCost = 0;
 
     if (words.length === 0) {
-      wordsRowsHtml = `<tr><td colspan="9" style="padding:14px; text-align:center; color:#999;">لا توجد كلمات مضافة</td></tr>`;
+      wordsRowsHtml = `<tr><td colspan="10" style="padding:14px; text-align:center; color:#999;">لا توجد كلمات مضافة</td></tr>`;
     } else {
       words.forEach((w, index) => {
         const height = w.heightCm / 100;
@@ -2019,12 +2139,15 @@
         if (w.jackBox) meters = meters * 2;
         let wordPrice = roundPrice(meters * PRICE_PER_METER);
         if (w.stroke) wordPrice += JACK_BOOK_PRICE;
+        let costPrice = roundPrice(meters * COST_PRICE_PER_METER);
 
         meters = meters * qty;
         wordPrice = wordPrice * qty;
+        costPrice = costPrice * qty;
 
         sumWordsMeters += meters;
         sumWordsPrice += wordPrice;
+        sumWordsCost += costPrice;
 
         wordsRowsHtml += `
           <tr>
@@ -2037,6 +2160,7 @@
             <td style="${rowTdStyle}">${w.jackBox ? 'نعم' : '-'}</td>
             <td style="${rowTdStyle}">${Math.round(meters * 100) / 100}</td>
             <td style="${rowTdStyle}">${wordPrice.toLocaleString('en-US')}</td>
+            <td style="${rowTdStyle}">${costPrice.toLocaleString('en-US')}</td>
           </tr>`;
       });
     }
@@ -2109,6 +2233,7 @@
               <th style="${thStyle}">وجهين</th>
               <th style="${thStyle}">الأمتار</th>
               <th style="${thStyle}">السعر</th>
+              <th style="${thStyle}">الكلفة</th>
             </tr>
           </thead>
           <tbody>${wordsRowsHtml}</tbody>
@@ -2117,6 +2242,7 @@
               <td colspan="7" style="${totalRowStyle}">المجموع</td>
               <td style="${totalRowStyle}">${Math.round(sumWordsMeters * 100) / 100}</td>
               <td style="${totalRowStyle}">${sumWordsPrice.toLocaleString('en-US')}</td>
+              <td style="${totalRowStyle}">${sumWordsCost.toLocaleString('en-US')}</td>
             </tr>
           </tfoot>
         </table>
