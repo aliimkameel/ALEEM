@@ -527,6 +527,46 @@
       font-size: 10.5px;
     }
   }
+
+  .pdfimp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;padding:12px}
+  .pdfimp-box{background:var(--card-bg,#1c1e22);color:var(--text-main);border:1px solid var(--gold);border-radius:16px;width:100%;max-width:1240px;max-height:94vh;overflow:auto;padding:16px;direction:rtl}
+  [data-theme="dark"] .pdfimp-box{background:#15171a}
+  .pdfimp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:17px}
+  .pdfimp-head button{background:var(--danger-bg);color:var(--danger-text);border:0;border-radius:8px;padding:6px 12px;cursor:pointer}
+  .pdfimp-ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:end}
+  .pdfimp-ctrl label{margin:0;font-size:12px}
+  .pdfimp-ctrl input[type=file]{width:100%;color:var(--text-main)}
+  .pdfimp-hint{font-size:12px;color:var(--gold);margin:10px 0}
+  .pdfimp-stage{position:relative;width:100%;background:#9a9a9a;border-radius:10px;overflow:auto;max-height:70vh;direction:ltr}
+  .pdfimp-inner{position:relative;width:100%}
+  .pdfimp-zoom{display:inline-flex;align-items:center;gap:6px}
+  .pdfimp-zoom b{min-width:48px;text-align:center;color:var(--text-main);font-size:13px}
+  .pdfimp-stage canvas{display:block;width:100%;height:auto}
+  #pdfImpBoxes{position:absolute;inset:0;cursor:crosshair;touch-action:none}
+  .pib{position:absolute;border:2px solid #e8a400;box-sizing:border-box;pointer-events:auto;cursor:move}
+  .pib.on{border-color:#00b3ff;background:rgba(0,179,255,.10)}
+  .pib.on span{background:#00b3ff}
+  .pib.sel{pointer-events:none;cursor:crosshair}
+  .hd{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #00b3ff;border-radius:3px;box-sizing:border-box}
+  .hd.nw{left:-8px;top:-8px;cursor:nwse-resize}.hd.ne{right:-8px;top:-8px;cursor:nesw-resize}
+  .hd.sw{left:-8px;bottom:-8px;cursor:nesw-resize}.hd.se{right:-8px;bottom:-8px;cursor:nwse-resize}
+  .hd.n{left:calc(50% - 7px);top:-8px;cursor:ns-resize}.hd.s{left:calc(50% - 7px);bottom:-8px;cursor:ns-resize}
+  .hd.w{left:-8px;top:calc(50% - 7px);cursor:ew-resize}.hd.e{right:-8px;top:calc(50% - 7px);cursor:ew-resize}
+  .pdfimp-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+  .pdfimp-tools button{background:transparent;border:1.5px solid var(--gold);color:var(--gold);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px}
+  .pdfimp-tools .checkbox-label{margin:0}
+  .pdfimp-tbl tr.on{background:rgba(0,179,255,.12)}
+  .pib span{position:absolute;top:-1px;left:-1px;background:#e8a400;color:#000;font:700 12px sans-serif;padding:1px 6px}
+  .pib.sel{border-style:dashed;border-color:#00b3ff}
+  .pdfimp-tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  .pdfimp-tbl th,.pdfimp-tbl td{border-bottom:1px solid var(--divider);padding:6px;text-align:center}
+  .pdfimp-tbl input.pib-ck{width:20px;height:20px;padding:0;cursor:pointer;accent-color:var(--gold)}
+  .pdfimp-tbl input{width:90px;padding:6px;text-align:center}
+  .pib-del{background:var(--danger-bg);color:var(--danger-text);border:0;border-radius:6px;padding:5px 10px;cursor:pointer}
+  .pdfimp-drop{border:2px dashed var(--gold);border-radius:12px;padding:14px;text-align:center;color:var(--gold);cursor:pointer;margin-bottom:12px;font-size:14px;transition:background .15s,border-color .15s}
+  .pdfimp-drop b{display:block;margin-top:4px;color:var(--text-main);font-size:12px;font-weight:600}
+  .pdfimp-drop.over{background:rgba(217,162,83,.22);border-style:solid}
+  .pdfimp-overlay.dragging .pdfimp-box{outline:3px dashed var(--gold)}
 </style>
 
 <style>
@@ -877,6 +917,7 @@
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -901,6 +942,36 @@
       <button type="submit" class="add-word-btn" style="margin-top:14px;">دخول</button>
     </form>
     <div class="login-error" id="loginError">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+  </div>
+
+  <!-- شاشة إنشاء حساب الأدمن (تظهر مرة واحدة فقط أول تشغيل، ما ماكو أي حساب موجود) -->
+  <div class="login-card" id="setupCard" style="display:none;">
+    <div class="icon-frame">
+      <img src="icon-512.png" alt="شعار البرنامج">
+    </div>
+    <h2>إنشاء حساب الأدمن</h2>
+    <p>أول مرة تشغّل البرنامج، أنشئ حساب الأدمن وكلمة المرور الخاصة بك</p>
+    <form id="setupForm">
+      <div class="neu-input-wrap">
+        <input type="text" id="setupUsername" placeholder="اسم المستخدم للأدمن" autocomplete="off">
+        <span class="neu-icon">👤</span>
+      </div>
+      <div class="neu-input-wrap">
+        <input type="password" id="setupPassword" placeholder="كلمة المرور" autocomplete="off">
+        <button type="button" class="neu-toggle-pw" data-target="setupPassword" title="إظهار/إخفاء كلمة المرور">👁️</button>
+      </div>
+      <div class="neu-input-wrap">
+        <input type="password" id="setupPassword2" placeholder="أعد كتابة كلمة المرور" autocomplete="off">
+        <button type="button" class="neu-toggle-pw" data-target="setupPassword2" title="إظهار/إخفاء كلمة المرور">👁️</button>
+      </div>
+      <button type="submit" class="add-word-btn" style="margin-top:14px;">إنشاء الحساب</button>
+    </form>
+    <div class="hint-text picked-users-hint" id="pickedUsersFileHintSetup" style="margin-top:12px;">لم يتم اختيار ملف بعد — سيتم استخدام users.txt من مجلد البرنامج</div>
+      <div style="margin-top:8px;">
+        <button type="button" class="add-word-btn" id="pickUsersFileBtnSetup" style="background:transparent; border:1.5px solid var(--gold); color:var(--gold); box-shadow:none;">📁 اختيار ملف users.txt من المجلد المشترك</button>
+      </div>
+    </div>
+    <div class="login-error" id="setupError"></div>
   </div>
 
   <div class="card" id="appCard" style="display:none;">
@@ -930,6 +1001,7 @@
       <h3>كلمات الإعلان</h3>
       <div class="words-layout">
         <div class="word-form">
+          <button type="button" class="add-word-btn" id="openPdfImpBtn" style="background:transparent; border:1.5px solid var(--gold); color:var(--gold); box-shadow:none; margin-bottom:12px;">📥 قراءة القياسات من ملف PDF</button>
           <div class="editing-label" id="editingLabel">تعديل الكلمة رقم <span id="editingLabelNumber"></span></div>
 
           <label for="newWordHeight">الارتفاع (سم)</label>
@@ -957,7 +1029,6 @@
           <div class="live-preview">
             <div class="lp-row"><span>عدد الأمتار</span><span id="previewMeters">0</span></div>
             <div class="lp-row"><span>السعر</span><span id="previewPrice">0</span></div>
-            <div class="lp-row"><span>سعر الكلفة</span><span id="previewCost">0</span></div>
           </div>
 
           <button type="button" class="add-word-btn" id="addWordBtn">+ إضافة</button>
@@ -977,13 +1048,12 @@
                 <th>وجهين</th>
                 <th>الأمتار</th>
                 <th>السعر</th>
-                <th>الكلفة</th>
                 <th>حذف</th>
               </tr>
             </thead>
             <tbody id="wordsTableBody">
               <tr class="empty-row">
-                <td colspan="11">ما اضفت أي كلمة بعد</td>
+                <td colspan="10">ما اضفت أي كلمة بعد</td>
               </tr>
             </tbody>
             <tfoot>
@@ -991,7 +1061,6 @@
                 <td colspan="7">المجموع</td>
                 <td id="wordsSumMeters">0</td>
                 <td id="wordsSumPrice">0</td>
-                <td id="wordsSumCost">0</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -1075,6 +1144,7 @@
     </div>
 
     <div class="result">
+      <div class="meters">مجموع عدد أمتار الفريمات: <span id="frameMeters">0</span> متر طولي</div>
       <div class="meters">سعر الفريمات الكلي: <span id="framePrice">0</span> د.ع</div>
     </div>
 
@@ -1090,6 +1160,32 @@
   </div>
 
   <!-- منطقة مخفية تستخدم فقط عند توليد ملف PDF -->
+    <div class="pdfimp-overlay" id="pdfImp">
+    <div class="pdfimp-box">
+      <div class="pdfimp-head"><b>📥 قراءة القياسات من PDF</b><button type="button" id="pdfImpClose">✕ إغلاق</button></div>
+      <input type="file" id="pdfImpFile" accept="application/pdf,.pdf" style="display:none">
+      <div class="pdfimp-drop" id="pdfImpDrop"><div>📂 اسحب ملف PDF وأفلته هنا، أو اضغط للاختيار</div><b id="pdfImpDropName"></b></div>
+      <div class="pdfimp-ctrl">
+        
+        <div><label>رقم الصفحة</label><input type="number" id="pdfImpPage" min="1" value="1"></div>
+        <div><label>العرض الحقيقي للوحة التصميم (سم)</label><input type="number" id="pdfImpRealW" step="0.1"></div>
+        <div><label>حساسية دمج الحروف (٪)</label><input type="range" id="pdfImpMerge" min="0.5" max="8" step="0.1" value="2.4" style="width:100%"></div>
+        <label class="checkbox-label"><input type="checkbox" id="pdfImpLines" checked><span>دمج كلمات السطر الواحد</span></label>
+      </div>
+      <div class="pdfimp-hint" id="pdfImpHint">اختر ملف PDF. يُقاس كل عنصر (الاسم العربي، الاسم الإنجليزي، الشعار) بالترتيب. إذا كان التصميم مرسوماً بمقياس مصغّر اكتب العرض الحقيقي للوحة بالسنتيمتر.</div>
+      <div class="pdfimp-tools">
+        <span class="pdfimp-zoom"><button type="button" id="pdfImpZoomOut" title="تصغير">➖</button><b id="pdfImpZoomVal">100%</b><button type="button" id="pdfImpZoomIn" title="تكبير">➕</button><button type="button" id="pdfImpZoomFit">ملاءمة</button></span>
+        <button type="button" id="pdfImpSnap">🎯 ضبط المربع المحدد على المحتوى</button>
+        <button type="button" id="pdfImpDelSel">🗑 حذف المربع المحدد</button>
+        <label class="checkbox-label"><input type="checkbox" id="pdfImpAuto"><span>ضبط تلقائي على المحتوى بعد كل تعديل</span></label>
+      </div>
+      <div class="pdfimp-stage" id="pdfImpStage"><div class="pdfimp-inner" id="pdfImpInner"><canvas id="pdfImpCanvas" width="10" height="10"></canvas><div id="pdfImpBoxes"></div></div></div>
+      <table class="pdfimp-tbl"><thead><tr><th>ت</th><th>المعاينة</th><th>الارتفاع (سم)</th><th>العرض (سم)</th><th>العدد</th><th>ستروك ثالث</th><th>بوكس</th><th></th></tr></thead><tbody id="pdfImpRows"></tbody></table>
+      <label class="checkbox-label"><input type="checkbox" id="pdfImpReplace"><span>استبدال الكلمات الحالية في الجدول</span></label>
+      <button type="button" class="add-word-btn" id="pdfImpAddBtn" style="margin-top:10px">✅ إضافة الكل لجدول الكلمات</button>
+    </div>
+  </div>
+
   <div id="pdfExportArea" style="position:fixed; top:0; left:-9999px; width:820px; box-sizing:border-box; background:#ffffff; padding:32px; direction:rtl; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color:#1a1a1a;"></div>
 
   <!-- صفحة إدارة المستخدمين الكاملة (تظهر فقط للأدمن) -->
@@ -1105,9 +1201,12 @@
 
     <button type="button" class="cancel-edit-btn" id="backToAppBtn" style="display:block;">← رجوع للحاسبة</button>
 
-    <div class="section users-section" style="border-top:none; margin-top:10px;">
+    <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start;">
+    <div class="section users-section" style="border-top:none; margin-top:10px; flex:1 1 380px; min-width:0;">
       <h3>المستخدمون الحاليون</h3>
       <div class="hint-text" style="margin-top:0; margin-bottom:12px;">اضغط ضغطتين (Double Click) على أي مستخدم لتعديل بياناته</div>
+      <label for="usersFilterInput" style="margin-top:0;">بحث / فلترة</label>
+      <input type="text" id="usersFilterInput" placeholder="اكتب اسم أو أول حرف لاختيار المستخدم" style="width:100%; padding:12px 14px; border:1px solid var(--input-border); border-radius:10px; font-size:15px; background:var(--input-bg); color:var(--text-main); margin-bottom:10px; box-sizing:border-box;">
       <div class="users-table-shell">
         <div class="word-list-wrapper">
           <table class="users-table">
@@ -1120,7 +1219,7 @@
       </div>
     </div>
 
-    <div class="section users-section">
+    <div class="section users-section" style="flex:0 1 420px; min-width:300px;">
       <h3>إضافة مستخدم جديد</h3>
       <div class="add-user-card">
         <div class="neu-input-wrap">
@@ -1143,13 +1242,31 @@
         <div class="login-error" id="usersPanelError"></div>
       </div>
 
-      <div class="hint-text" style="max-width:420px; margin:16px auto 0;">
-        <span id="syncStatusText">إذا فعّلت JSONBin، كل تعديل ينتشر تلقائياً لكل الزوار بدون أي خطوة إضافية.</span>
-        <span id="syncFallbackText" style="display:none;">بعد إضافة أو تعديل أو حذف أي مستخدم، اضغط الزر تحت حتى تحمّل ملف <b>users.txt</b> المحدث، وبعدين ارفعه (استبدل القديم) على استضافتك (مثل GitHub) حتى يشوف كل زائر جديد نفس التحديث.</span>
+      <div style="max-width:420px; margin:16px auto 0;">
+        <button type="button" class="add-word-btn" id="pickUsersFileBtn" style="background:transparent; border:1.5px solid var(--gold); color:var(--gold); box-shadow:none;">📁 اختيار ملف users.txt من المجلد المشترك</button>
       </div>
-      <div style="max-width:420px; margin:10px auto 0;">
-        <button type="button" class="add-word-btn" id="downloadUsersTxtBtn" style="background:transparent; border:1.5px solid var(--gold); color:var(--gold); box-shadow:none;">⬇️ تنزيل ملف users.txt المحدث</button>
+      <div class="hint-text picked-users-hint" id="pickedUsersFileHint" style="margin-top:8px;">لم يتم اختيار ملف بعد — وسيتم استخدام users.txt من مجلد البرنامج</div>
+      <div style="max-width:420px; margin:8px auto 0;">
+        <button type="button" class="add-word-btn grant-file-btn" id="grantFileAccessBtn" style="display:none; background:transparent; border:1.5px solid var(--gold); color:var(--gold); box-shadow:none;">🔓 منح الإذن للملف</button>
       </div>
+    </div>
+    </div>
+
+    <div class="section">
+      <h3>الإعدادات (الأسعار والمعادلات)</h3>
+      <label for="setPricePerMeter">سعر المتر للكلمات (د.ع)</label>
+      <input type="number" id="setPricePerMeter" step="1000">
+      <label for="setFramePricePerMeter">سعر المتر للفريم (د.ع)</label>
+      <input type="number" id="setFramePricePerMeter" step="1000">
+      <label for="setStrokePrice">سعر الستروك (د.ع)</label>
+      <input type="number" id="setStrokePrice" step="1000">
+      <label for="setConstFactor">معامل الحساب (CONST_FACTOR)</label>
+      <input type="number" id="setConstFactor" step="0.01">
+      <label for="setBoxFactor">معامل البوكس (مثال: 1.2)</label>
+      <input type="number" id="setBoxFactor" step="0.01">
+      <label for="setJackBoxFactor">معامل الوجهين (مثال: 2)</label>
+      <input type="number" id="setJackBoxFactor" step="0.1">
+      <div class="hint-text" style="text-align:right;">تتغير جميع الحسابات والأسعار في البرنامج والـ PDF تلقائياً عند التعديل</div>
     </div>
 
     <div class="footer-credit">Design &amp; Development by Aleem Al-Ibrahimi</div>
@@ -1160,13 +1277,11 @@
   // ================= نظام تسجيل الدخول وإدارة المستخدمين =================
   const USERS_KEY = 'adcalc_users_v2';
   const SESSION_KEY = 'adcalc_session_v2';
-  const DEFAULT_ADMIN = { username: 'admin', password: 'Aleem2026' };
+  let needsAdminSetup = false;
+  // ملاحظة أمنية: ماكو أي كلمة مرور داخل الكود. أول مرة تشغّل البرنامج (إذا ما موجود أي مستخدم)
+  // تظهر لك شاشة إنشاء حساب الأدمن، وكلمة مروره تضبطها بنفسك.
 
-  // ===== إعدادات JSONBin.io لمزامنة المستخدمين تلقائياً بين كل الأجهزة =====
-  // عبّي هالقيمتين بعد ما تسوي حساب مجاني على jsonbin.io وتنشئ Bin جديد
-  const JSONBIN_BIN_ID = 'YOUR_BIN_ID_HERE';
-  const JSONBIN_API_KEY = 'YOUR_MASTER_KEY_HERE';
-  const JSONBIN_ENABLED = JSONBIN_BIN_ID !== 'YOUR_BIN_ID_HERE' && JSONBIN_API_KEY !== 'YOUR_MASTER_KEY_HERE';
+  // المصدر الوحيد لقائمة المستخدمين هو ملف users.txt في المجلد المشترك
 
 
   function loadUsers() {
@@ -1197,101 +1312,242 @@
       .filter(u => u.username);
   }
 
-  // محاولة تحميل المستخدمين من ملف users.txt الموجود بنفس مجلد الموقع (يشتغل بس لو الملف موجود فعلاً على الاستضافة)
+  // ===== حفظ مسار ملف المستخدمين المشترك باستخدام File System Access API + IndexedDB =====
+  const HANDLES_DB_NAME = 'adcalc_handles_db';
+  const HANDLES_STORE = 'handles';
+  let usersFileHandle = null;
+
+  function openHandlesDb() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(HANDLES_DB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(HANDLES_STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function saveHandleToIdb(handle) {
+    try {
+      const db = await openHandlesDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(HANDLES_STORE, 'readwrite');
+        tx.objectStore(HANDLES_STORE).put(handle, 'usersFile');
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {}
+  }
+
+  async function loadHandleFromIdb() {
+    try {
+      const db = await openHandlesDb();
+      return await new Promise((resolve) => {
+        const tx = db.transaction(HANDLES_STORE, 'readonly');
+        const req = tx.objectStore(HANDLES_STORE).get('usersFile');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) { return null; }
+  }
+
+  // التحقق من صلاحية الكتابة على الملف المحفوظ (قد يحتاج موافقة المستخدم مرة واحدة)
+  async function ensureHandlePermission(handle) {
+    try {
+      const opts = { mode: 'readwrite' };
+      if ((await handle.queryPermission(opts)) === 'granted') return true;
+      if ((await handle.requestPermission(opts)) === 'granted') return true;
+      return false;
+    } catch (e) { return false; }
+  }
+
+  // قراءة المستخدمين من ملف المجلد المشترك المختار
+  // ترجع { ok, users }: ok = هل قدرنا نقرأ الملف فعلاً، users = القائمة (قد تكون فارغة)
+  async function loadUsersFromPickedFile() {
+    if (!usersFileHandle) return { ok: false, users: null };
+    try {
+      const file = await usersFileHandle.getFile();
+      const text = await file.text();
+      return { ok: true, users: txtToUsers(text) };
+    } catch (e) {
+      return { ok: false, users: null };
+    }
+  }
+
+  // مصدر المستخدمين الموثوق:
+  // 1) إذا فيه ملف مشترك مختار → الملف هو المرجع (لو قرأناه نتبعه بالضبط، ولو ما قدرنا نقراه نخلي المحلي)
+  // 2) إذا ماكو ملف مختار → التخزين المحلي هو المرجع، وملف users.txt بمجلد البرنامج يُستورد فقط إذا كان فيه مستخدمين
+  //    (ما نمسح البيانات المحلية أبداً لمجرد أن الملف فارغ أو غير موجود)
+  async function applyUsersFromSource() {
+    if (usersFileHandle) {
+      const picked = await loadUsersFromPickedFile();
+      if (picked.ok) {
+        saveUsers(picked.users);
+      }
+      return loadUsers();
+    }
+
+    const localUsers = loadUsers();
+    if (localUsers.length > 0) return localUsers;
+
+    const inFolder = await loadUsersFromTxtFile();
+    if (inFolder.ok && inFolder.users.length > 0) {
+      saveUsers(inFolder.users);
+    }
+    return loadUsers();
+  }
+
+  // كتابة المستخدمين إلى ملف المجلد المشترك مباشرة (حفظ تلقائي)
+  async function saveUsersToPickedFile(users) {
+    if (!usersFileHandle) return;
+    try {
+      const ok = await ensureHandlePermission(usersFileHandle);
+      if (!ok) {
+        // المتصفح رفض الإذن: نخبر المستخدم مرة وحدة بدون ما نزعجه
+        updatePickedFileHint();
+        return;
+      }
+      const writable = await usersFileHandle.createWritable();
+      await writable.write(usersToTxt(users));
+      await writable.close();
+    } catch (e) { console.error('تعذر الحفظ في ملف المستخدمين:', e); }
+  }
+
+  // إعادة منح الإذن للملف المحفوظ (يحتاجه المتصفح مرة وحدة بعد إعادة فتح البرنامج)
+  async function regrantUsersFileAccess() {
+    if (!usersFileHandle) return false;
+    try {
+      const opts = { mode: 'readwrite' };
+      const state = await usersFileHandle.queryPermission(opts);
+      if (state === 'granted') return true;
+      const result = await usersFileHandle.requestPermission(opts);
+      if (result === 'granted') {
+        updatePickedFileHint();
+        const picked = await loadUsersFromPickedFile();
+        if (picked.ok) {
+          saveUsers(picked.users);
+          populateUsernamesList();
+        }
+        return true;
+      }
+      return false;
+    } catch (e) { return false; }
+  }
+
+  // لا نطلب الإذن تلقائي عند كل ضغطة (كان يطلع تنبيه المتصفح كل مرة).
+  // الإذن يُطلب فقط عند الضغط على زر منح الإذن أو عند حفظ تعديل على المستخدمين.
+  async function requestFilePermissionIfNeeded() {
+    if (!usersFileHandle) return false;
+    try {
+      const opts = { mode: 'readwrite' };
+      if ((await usersFileHandle.queryPermission(opts)) === 'granted') return true;
+      if ((await usersFileHandle.requestPermission(opts)) === 'granted') return true;
+      return false;
+    } catch (e) { return false; }
+  }
+
+  function updatePickedFileHint() {
+    const hints = document.querySelectorAll('.picked-users-hint');
+    const grantBtns = document.querySelectorAll('.grant-file-btn');
+
+    const setAll = (text) => {
+      hints.forEach(h => { h.textContent = text; });
+      grantBtns.forEach(b => { b.style.display = 'none'; });
+    };
+
+    if (!usersFileHandle) {
+      setAll('لم يتم اختيار ملف بعد — سيتم استخدام users.txt من مجلد البرنامج');
+      return;
+    }
+    setAll('✅ الملف الحالي: ' + usersFileHandle.name + ' — كل تعديل يُحفظ تلقائياً فيه');
+
+    (async () => {
+      try {
+        const state = await usersFileHandle.queryPermission({ mode: 'readwrite' });
+        if (state === 'prompt') {
+          const msg = 'الملف: ' + usersFileHandle.name + ' — للسماح للبرنامج بالكتابة فيه اضغط زر "منح الإذن" (مرة وحدة فقط)';
+          hints.forEach(h => { h.textContent = msg; });
+          grantBtns.forEach(b => { b.style.display = 'block'; });
+        }
+      } catch (e) {}
+    })();
+  }
+
+  async function pickUsersFile() {
+    if (!window.showOpenFilePicker) {
+      alert('متصفحك لا يدعم اختيار الملف المباشر. استخدم Chrome أو Edge.');
+      return;
+    }
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'ملف المستخدمين', accept: { 'text/plain': ['.txt'] } }],
+        multiple: false
+      });
+      usersFileHandle = handle;
+      await saveHandleToIdb(handle);
+      updatePickedFileHint();
+
+      const picked = await loadUsersFromPickedFile();
+      if (picked.ok && picked.users.length > 0) {
+        // الملف فيه مستخدمين: نحفظهم ونخرج من شاشة إنشاء الحساب إلى شاشة تسجيل الدخول
+        saveUsersAndSync(picked.users);
+        renderUsersTable();
+        populateUsernamesList();
+
+        const setupCard = document.getElementById('setupCard');
+        const setupVisible = setupCard && getComputedStyle(setupCard).display !== 'none';
+        if (setupVisible) {
+          document.getElementById('setupUsername').value = '';
+          document.getElementById('setupPassword').value = '';
+          document.getElementById('setupPassword2').value = '';
+          needsAdminSetup = false;
+          await showLoginScreen();
+          alert('تم تحميل المستخدمين من: ' + handle.name);
+          return;
+        }
+
+        alert('تم تحميل المستخدمين من: ' + handle.name);
+      } else if (picked.ok) {
+        // الملف فارغ: نحفظ مساره فقط، ونكمل إنشاء الحساب ليُكتب داخله تلقائياً
+        alert('تم اختيار الملف: ' + handle.name + '\nالملف فارغ، سيُكتب حساب الأدمن الجديد داخله تلقائياً.');
+      }
+    } catch (e) {
+      if (e && e.name !== 'AbortError') alert('تعذر اختيار الملف');
+    }
+  }
+  // ===== نهاية نظام ملف المستخدمين المشترك =====
+
+  // محاولة تحميل المستخدمين من ملف users.txt الموجود بنفس مجلد الموقع
+  // ترجع { ok, users }: ok = الملف موجود وقدرنا نقراه فعلاً
   async function loadUsersFromTxtFile() {
     try {
       const response = await fetch('users.txt', { cache: 'no-store' });
-      if (!response.ok) return null;
+      if (!response.ok) return { ok: false, users: null };
       const text = await response.text();
-      const users = txtToUsers(text);
-      return users.length > 0 ? users : null;
+      return { ok: true, users: txtToUsers(text) };
     } catch (e) {
-      return null;
+      return { ok: false, users: null };
     }
   }
 
-  // قراءة قائمة المستخدمين من JSONBin (المصدر المشترك المباشر بين كل الأجهزة)
-  async function loadUsersFromJsonBin() {
-    if (!JSONBIN_ENABLED) return null;
-    try {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-        headers: { 'X-Master-Key': JSONBIN_API_KEY }
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      const users = data && data.record;
-      return Array.isArray(users) && users.length > 0 ? users : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // كتابة قائمة المستخدمين إلى JSONBin حتى تصير التحديثات تلقائية للجميع
-  let jsonBinSyncTimer = null;
-  async function syncUsersToJsonBin(users) {
-    if (!JSONBIN_ENABLED) return;
-    try {
-      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': JSONBIN_API_KEY
-        },
-        body: JSON.stringify(users)
-      });
-    } catch (e) {
-      console.error('تعذرت مزامنة المستخدمين مع JSONBin:', e);
-    }
-  }
-
-  // نداء موحّد: يحفظ محلياً فوراً + يزامن مع JSONBin بالخلفية (بدون ما يعطّل الواجهة)
+  // نداء موحّد: يحفظ محلياً فوراً + يكتب مباشرة بملف المجلد المشترك
   function saveUsersAndSync(users) {
     saveUsers(users);
-    syncUsersToJsonBin(users);
+    saveUsersToPickedFile(users);
   }
 
   async function ensureDefaultAdmin() {
-    // أولاً: نحاول نجيب المستخدمين من JSONBin (تحديث تلقائي حقيقي بين كل الأجهزة)
-    const cloudUsers = await loadUsersFromJsonBin();
-    if (cloudUsers) {
-      saveUsers(cloudUsers);
-      return;
-    }
+    // أولاً: ملف المستخدمين المشترك المختار سابقاً من المستخدم
+    usersFileHandle = await loadHandleFromIdb();
+    updatePickedFileHint();
 
-    // ثانياً: نحاول نجيب المستخدمين من ملف users.txt المشترك (لو موجود على الاستضافة)
-    const fileUsers = await loadUsersFromTxtFile();
-    if (fileUsers) {
-      saveUsers(fileUsers);
-      if (JSONBIN_ENABLED) syncUsersToJsonBin(fileUsers);
-      return;
-    }
+    await applyUsersFromSource();
 
-    // إذا ماكو JSONBin ولا ملف users.txt (مثلاً تجربة محلية)، نستخدم التخزين المحلي كما هو
-    let users = loadUsers();
-    if (users.length === 0) {
-      users.push({ username: DEFAULT_ADMIN.username, password: DEFAULT_ADMIN.password, role: 'admin' });
-      saveUsers(users);
-      if (JSONBIN_ENABLED) syncUsersToJsonBin(users);
+    if (loadUsers().length === 0) {
+      needsAdminSetup = true;
     }
   }
 
-  // تنزيل ملف users.txt المحدث حتى الأدمن يرفعه على الاستضافة يدوياً
-  function downloadUsersTxt() {
-    const users = loadUsers();
-    const content = usersToTxt(users);
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'users.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // نستخدم sessionStorage بدل localStorage حتى تسجيل الدخول ينمسح تلقائياً
-  // إذا المستخدم سكر التبويب/المتصفح وفتحه من جديد (يطلب تسجيل دخول من جديد دائماً)
+  // نستخدم sessionStorage فقط: كل مرة تفتح البرنامج يطلب تسجيل دخول من جديد
   function getSession() {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
@@ -1309,6 +1565,7 @@
 
   function showAppScreen(session) {
     document.getElementById('loginCard').style.display = 'none';
+    document.getElementById('setupCard').style.display = 'none';
     const appCard = document.getElementById('appCard');
     appCard.style.display = 'block';
     document.getElementById('currentUserName').textContent = session.username;
@@ -1317,19 +1574,65 @@
     document.getElementById('openUsersPanelBtn').style.display = session.role === 'admin' ? 'block' : 'none';
   }
 
-  function showLoginScreen() {
+  // إعادة قراءة قائمة المستخدمين من الملف المشترك كل مرة قبل عرض شاشة الدخول،
+  // حتى لو الأدمن عدّل أو حذف المستخدمين من ملف آخر، تنحذف الأسماء فوراً من كل الأجهزة
+  async function refreshUsersFromSource() {
+    if (!usersFileHandle) {
+      usersFileHandle = await loadHandleFromIdb();
+      updatePickedFileHint();
+    }
+
+    await applyUsersFromSource();
+
+    // إذا ما قدرنا نقرأ أي ملف، نخلي القائمة المحلية (المحفوظة) كما هي بدون ما نمسحها
+    populateUsernamesList();
+    return loadUsers();
+  }
+
+  async function showLoginScreen() {
+    document.getElementById('setupCard').style.display = 'none';
     document.getElementById('appCard').style.display = 'none';
     document.getElementById('loginCard').style.display = 'block';
+
+    const users = await refreshUsersFromSource();
+    if (users.length === 0) {
+      needsAdminSetup = true;
+      showSetupScreen();
+    }
+  }
+
+  function showSetupScreen() {
+    // حماية: ما تظهر شاشة إنشاء الأدمن إلا إذا ماكو أي مستخدم محفوظ إطلاقاً
+    if (loadUsers().length > 0) {
+      document.getElementById('setupCard').style.display = 'none';
+      document.getElementById('appCard').style.display = 'none';
+      document.getElementById('loginCard').style.display = 'block';
+      populateUsernamesList();
+      return;
+    }
+    document.getElementById('appCard').style.display = 'none';
+    document.getElementById('loginCard').style.display = 'none';
+    document.getElementById('setupCard').style.display = 'block';
   }
 
   let editingUsername = null;
+  let activeOptionIndex = -1;
 
   async function renderUsersTable() {
     const tbody = document.getElementById('usersTableBody');
     const users = loadUsers();
     const session = getSession();
+    const filterEl = document.getElementById('usersFilterInput');
+    const filterText = filterEl ? filterEl.value.trim().toLowerCase() : '';
+    const filteredUsers = filterText
+      ? users.filter(u => u.username.toLowerCase().includes(filterText))
+      : users;
     tbody.innerHTML = '';
-    users.forEach(u => {
+    if (filteredUsers.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-sub); padding:16px;">لا توجد نتائج مطابقة</td></tr>';
+      return;
+    }
+    filteredUsers.forEach(u => {
       const tr = document.createElement('tr');
       tr.style.cursor = 'pointer';
       if (editingUsername === u.username) {
@@ -1387,22 +1690,51 @@
     renderUsersTable();
   }
 
-  function populateUsernamesList() {
+  function populateUsernamesList(filterText) {
     const dropdown = document.getElementById('usernameDropdown');
     if (!dropdown) return;
     const users = loadUsers();
+    const filter = (filterText || '').trim().toLowerCase();
+    const filtered = filter
+      ? users.filter(u => u.username.toLowerCase().includes(filter))
+      : users;
     if (users.length === 0) {
       dropdown.innerHTML = '<div class="username-empty">لا يوجد مستخدمون بعد</div>';
       return;
     }
-    dropdown.innerHTML = users.map(u =>
+    if (filtered.length === 0) {
+      dropdown.innerHTML = '<div class="username-empty">لا توجد نتائج مطابقة</div>';
+      return;
+    }
+    dropdown.innerHTML = filtered.map(u =>
       `<div class="username-option" data-username="${u.username}">${u.username}</div>`
     ).join('');
+    // تحديد أول نتيجة تلقائياً حتى يكون المؤشر عليها ويكفي الضغط على Enter للاختيار
+    activeOptionIndex = 0;
+    highlightActiveOption();
+  }
+
+  // إبراز العنصر النشط داخل قائمة اقتراحات أسماء المستخدمين
+  function highlightActiveOption() {
+    const dropdown = document.getElementById('usernameDropdown');
+    if (!dropdown) return;
+    const options = dropdown.querySelectorAll('.username-option');
+    if (options.length === 0) {
+      activeOptionIndex = -1;
+      return;
+    }
+    if (activeOptionIndex >= options.length) {
+      activeOptionIndex = options.length - 1;
+    }
+    options.forEach((opt, i) => opt.classList.toggle('active', i === activeOptionIndex));
+    if (activeOptionIndex >= 0 && options[activeOptionIndex]) {
+      options[activeOptionIndex].scrollIntoView({ block: 'nearest' });
+    }
   }
 
   // يفتح القائمة المنسدلة ويعرض كل المستخدمين دائماً (بدون فلترة)، حتى لو كان الحقل فيه اسم مختار مسبقاً
   function openUsernameDropdown() {
-    populateUsernamesList();
+    populateUsernamesList(document.getElementById('loginUsername').value);
     document.getElementById('usernameDropdown').classList.add('open');
     document.getElementById('usernameDropdownArrow').classList.add('open');
   }
@@ -1415,12 +1747,52 @@
   function initAuthSystem() {
     ensureDefaultAdmin().then(() => {
       populateUsernamesList();
-      const session = getSession();
-      if (session) {
-        showAppScreen(session);
+      if (needsAdminSetup) {
+        showSetupScreen();
       } else {
-        showLoginScreen();
+        const session = getSession();
+        if (session) {
+          showAppScreen(session);
+        } else {
+          showLoginScreen();
+        }
       }
+    });
+
+    // إنشاء حساب الأدمن أول مرة
+    const setupForm = document.getElementById('setupForm');
+    const setupError = document.getElementById('setupError');
+    setupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      setupError.style.display = 'none';
+
+      const username = document.getElementById('setupUsername').value.trim();
+      const password = document.getElementById('setupPassword').value;
+      const password2 = document.getElementById('setupPassword2').value;
+
+      if (!username || !password) {
+        setupError.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور';
+        setupError.style.display = 'block';
+        return;
+      }
+      if (password !== password2) {
+        setupError.textContent = 'كلمتا المرور غير متطابقتين';
+        setupError.style.display = 'block';
+        return;
+      }
+      if (password.length < 4) {
+        setupError.textContent = 'كلمة المرور يجب أن تكون 4 أحرف على الأقل';
+        setupError.style.display = 'block';
+        return;
+      }
+
+      const users = [{ username, password, role: 'admin' }];
+      saveUsersAndSync(users);
+      needsAdminSetup = false;
+
+      const session = { username, role: 'admin' };
+      setSession(session);
+      showAppScreen(session);
     });
 
     const loginForm = document.getElementById('loginForm');
@@ -1428,16 +1800,56 @@
     const loginPassword = document.getElementById('loginPassword');
     const loginError = document.getElementById('loginError');
 
-    // فتح القائمة المنسدلة الكاملة عند الضغط على الحقل أو زر السهم، حتى لو فيه اسم مختار من قبل
-    loginUsername.addEventListener('focus', openUsernameDropdown);
-    loginUsername.addEventListener('click', openUsernameDropdown);
+    // القائمة تظهر فقط أثناء الكتابة (بدون focus أو click على الحقل)
+    loginUsername.addEventListener('input', () => {
+      const val = loginUsername.value.trim();
+      if (val) {
+        populateUsernamesList(loginUsername.value);
+        document.getElementById('usernameDropdown').classList.add('open');
+        document.getElementById('usernameDropdownArrow').classList.add('open');
+      } else {
+        activeOptionIndex = -1;
+        closeUsernameDropdown();
+      }
+    });
+
+    // التنقل بالكيبورد داخل قائمة الاقتراحات واختيار الاسم بالضغط على Enter
+    loginUsername.addEventListener('keydown', (e) => {
+      const dropdown = document.getElementById('usernameDropdown');
+      const options = dropdown.querySelectorAll('.username-option');
+      if (!dropdown.classList.contains('open') || options.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeOptionIndex = (activeOptionIndex + 1) % options.length;
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeOptionIndex = (activeOptionIndex - 1 + options.length) % options.length;
+      } else if (e.key === 'Enter' && activeOptionIndex >= 0) {
+        e.preventDefault();
+        loginUsername.value = options[activeOptionIndex].dataset.username;
+        closeUsernameDropdown();
+        document.getElementById('loginPassword').focus();
+        return;
+      } else if (e.key === 'Escape') {
+        closeUsernameDropdown();
+        return;
+      } else {
+        return;
+      }
+
+      highlightActiveOption();
+    });
     document.getElementById('usernameDropdownArrow').addEventListener('click', (e) => {
       e.stopPropagation();
       const dropdown = document.getElementById('usernameDropdown');
       if (dropdown.classList.contains('open')) {
         closeUsernameDropdown();
       } else {
-        openUsernameDropdown();
+        populateUsernamesList('');
+        dropdown.classList.add('open');
+        document.getElementById('usernameDropdownArrow').classList.add('open');
+        highlightActiveOption();
         loginUsername.focus();
       }
     });
@@ -1469,7 +1881,8 @@
         return;
       }
 
-      const users = loadUsers();
+      // نتحقق من الملف المشترك لحظة الدخول حتى لو المستخدم انحذف من جهاز ثاني
+      const users = await refreshUsersFromSource();
       const user = users.find(u => u.username === username && u.password === password);
 
       if (!user) {
@@ -1489,7 +1902,8 @@
       location.reload();
     });
 
-    document.getElementById('openUsersPanelBtn').addEventListener('click', () => {
+    document.getElementById('openUsersPanelBtn').addEventListener('click', async () => {
+      await refreshUsersFromSource();
       renderUsersTable();
       document.getElementById('appCard').style.display = 'none';
       document.getElementById('usersPageCard').style.display = 'block';
@@ -1576,11 +1990,10 @@
 
     document.getElementById('cancelUserEditBtn').addEventListener('click', exitUserEditMode);
 
-    document.getElementById('downloadUsersTxtBtn').addEventListener('click', downloadUsersTxt);
-
-    // إظهار النص المناسب حسب تفعيل JSONBin من عدمه
-    document.getElementById('syncStatusText').style.display = JSONBIN_ENABLED ? 'inline' : 'none';
-    document.getElementById('syncFallbackText').style.display = JSONBIN_ENABLED ? 'none' : 'inline';
+    document.getElementById('pickUsersFileBtn').addEventListener('click', pickUsersFile);
+    document.getElementById('pickUsersFileBtnSetup').addEventListener('click', pickUsersFile);
+    document.querySelectorAll('.grant-file-btn').forEach(btn => btn.addEventListener('click', regrantUsersFileAccess));
+    document.getElementById('usersFilterInput').addEventListener('input', () => renderUsersTable());
 
     // زر إظهار/إخفاء كلمة المرور
     document.querySelectorAll('.neu-toggle-pw').forEach(btn => {
@@ -1601,16 +2014,66 @@
 
   initAuthSystem();
   // ================= نهاية نظام تسجيل الدخول =================
-  const CONST_FACTOR = 0.70;
+  const CONST_FACTOR_DEFAULT = 0.70;
 
   // تقريب أي سعر لأقرب 1000 دينار (مثال: 262,286 تصير 262,000 / 262,700 تصير 263,000)
   function roundPrice(value) {
     return Math.round(value / 1000) * 1000;
   }
-  const PRICE_PER_METER = 170000;
-  const COST_PRICE_PER_METER = 75000;
-  const FRAME_PRICE_PER_METER = 50000;
-  const JACK_BOOK_PRICE = 70000;
+
+  // ===== الإعدادات القابلة للتعديل (تُحفظ في localStorage) =====
+  const SETTINGS_KEY = 'adcalc_settings_v1';
+  const DEFAULT_SETTINGS = {
+    pricePerMeter: 170000,
+    framePricePerMeter: 50000,
+    strokePrice: 70000,
+    constFactor: 0.70,
+    boxFactor: 1.2,
+    jackBoxFactor: 2
+  };
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      return raw ? Object.assign({}, DEFAULT_SETTINGS, JSON.parse(raw)) : { ...DEFAULT_SETTINGS };
+    } catch (e) { return { ...DEFAULT_SETTINGS }; }
+  }
+
+  let currentSettings = loadSettings();
+  let PRICE_PER_METER = currentSettings.pricePerMeter;
+  let FRAME_PRICE_PER_METER = currentSettings.framePricePerMeter;
+  let JACK_BOOK_PRICE = currentSettings.strokePrice;
+  let CONST_FACTOR = currentSettings.constFactor;
+  let BOX_FACTOR = currentSettings.boxFactor;
+  let JACKBOX_FACTOR = currentSettings.jackBoxFactor;
+
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings)); } catch (e) {}
+  }
+
+  function applySettingsFromForm() {
+    currentSettings.pricePerMeter = parseFloat(document.getElementById('setPricePerMeter').value) || DEFAULT_SETTINGS.pricePerMeter;
+    currentSettings.framePricePerMeter = parseFloat(document.getElementById('setFramePricePerMeter').value) || DEFAULT_SETTINGS.framePricePerMeter;
+    currentSettings.strokePrice = parseFloat(document.getElementById('setStrokePrice').value) || DEFAULT_SETTINGS.strokePrice;
+    currentSettings.constFactor = parseFloat(document.getElementById('setConstFactor').value) || DEFAULT_SETTINGS.constFactor;
+    currentSettings.boxFactor = parseFloat(document.getElementById('setBoxFactor').value) || DEFAULT_SETTINGS.boxFactor;
+    currentSettings.jackBoxFactor = parseFloat(document.getElementById('setJackBoxFactor').value) || DEFAULT_SETTINGS.jackBoxFactor;
+
+    PRICE_PER_METER = currentSettings.pricePerMeter;
+    FRAME_PRICE_PER_METER = currentSettings.framePricePerMeter;
+    JACK_BOOK_PRICE = currentSettings.strokePrice;
+    CONST_FACTOR = currentSettings.constFactor;
+    BOX_FACTOR = currentSettings.boxFactor;
+    JACKBOX_FACTOR = currentSettings.jackBoxFactor;
+
+    saveSettings();
+    renderWordsTable();
+    renderFramesTable();
+    updatePreview();
+    updateFramePreview();
+    calculate();
+  }
+  // ===== نهاية الإعدادات =====
 
   // ------- الوضع الليلي / النهاري -------
   const htmlEl = document.documentElement;
@@ -1640,14 +2103,12 @@
   const newWordJackBoxInput = document.getElementById('newWordJackBox');
   const previewMeters = document.getElementById('previewMeters');
   const previewPrice = document.getElementById('previewPrice');
-  const previewCost = document.getElementById('previewCost');
   const addWordBtn = document.getElementById('addWordBtn');
   const cancelEditBtn = document.getElementById('cancelEditBtn');
   const editingLabel = document.getElementById('editingLabel');
   const editingLabelNumber = document.getElementById('editingLabelNumber');
   const wordsTableBody = document.getElementById('wordsTableBody');
   const wordsSumPrice = document.getElementById('wordsSumPrice');
-  const wordsSumCost = document.getElementById('wordsSumCost');
   const wordsSumMeters = document.getElementById('wordsSumMeters');
 
   const newFrameHeightInput = document.getElementById('newFrameHeight');
@@ -1670,6 +2131,7 @@
   const priceOut = document.getElementById('price');
   const framePriceOut = document.getElementById('framePrice');
   const totalPriceOut = document.getElementById('totalPrice');
+  const frameMetersOut = document.getElementById('frameMeters');
 
   let wordIdCounter = 0;
   let words = []; // { id, heightCm, widthCm, stroke, box }
@@ -1832,10 +2294,10 @@
 
     let meters = (height / CONST_FACTOR) * width;
     if (newWordBoxInput.checked) {
-      meters = meters * 1.2;
+      meters = meters * BOX_FACTOR;
     }
     if (newWordJackBoxInput.checked) {
-      meters = meters * 2;
+      meters = meters * JACKBOX_FACTOR;
     }
 
     let wordPrice = roundPrice(meters * PRICE_PER_METER);
@@ -1843,16 +2305,12 @@
       wordPrice += JACK_BOOK_PRICE;
     }
 
-    let costPrice = roundPrice(meters * COST_PRICE_PER_METER);
-
     // ضرب النتيجة النهائية بالعدد
     meters = meters * qty;
     wordPrice = wordPrice * qty;
-    costPrice = costPrice * qty;
 
     previewMeters.textContent = Math.round(meters * 100) / 100;
     previewPrice.textContent = wordPrice.toLocaleString('en-US') + ' د.ع';
-    previewCost.textContent = costPrice.toLocaleString('en-US') + ' د.ع';
   }
 
   function resetForm() {
@@ -1948,17 +2406,15 @@
     if (words.length === 0) {
       const tr = document.createElement('tr');
       tr.className = 'empty-row';
-      tr.innerHTML = '<td colspan="11">ما اضفت أي كلمة بعد</td>';
+      tr.innerHTML = '<td colspan="10">ما اضفت أي كلمة بعد</td>';
       wordsTableBody.appendChild(tr);
       wordsSumPrice.textContent = '0';
       wordsSumMeters.textContent = '0';
-      wordsSumCost.textContent = '0';
       return;
     }
 
     let sumPrice = 0;
     let sumMeters = 0;
-    let sumCost = 0;
 
     words.forEach((w, index) => {
       const height = w.heightCm / 100;
@@ -1967,10 +2423,10 @@
 
       let meters = (height / CONST_FACTOR) * width;
       if (w.box) {
-        meters = meters * 1.2;
+        meters = meters * BOX_FACTOR;
       }
       if (w.jackBox) {
-        meters = meters * 2;
+        meters = meters * JACKBOX_FACTOR;
       }
 
       let wordPrice = roundPrice(meters * PRICE_PER_METER);
@@ -1978,15 +2434,11 @@
         wordPrice += JACK_BOOK_PRICE;
       }
 
-      let costPrice = roundPrice(meters * COST_PRICE_PER_METER);
-
       meters = meters * qty;
       wordPrice = wordPrice * qty;
-      costPrice = costPrice * qty;
 
       sumPrice += wordPrice;
       sumMeters += meters;
-      sumCost += costPrice;
 
       const tr = document.createElement('tr');
       if (w.id === editingWordId) {
@@ -2002,7 +2454,6 @@
         <td>${w.jackBox ? '✔' : '-'}</td>
         <td>${Math.round(meters * 100) / 100}</td>
         <td>${wordPrice.toLocaleString('en-US')}</td>
-        <td>${costPrice.toLocaleString('en-US')}</td>
         <td class="delete-cell"><button type="button" data-id="${w.id}">حذف</button></td>
       `;
       tr.addEventListener('dblclick', () => enterEditMode(w, index + 1));
@@ -2015,7 +2466,6 @@
 
     wordsSumPrice.textContent = sumPrice.toLocaleString('en-US');
     wordsSumMeters.textContent = Math.round(sumMeters * 100) / 100;
-    wordsSumCost.textContent = sumCost.toLocaleString('en-US');
   }
 
   function calculate() {
@@ -2029,10 +2479,10 @@
 
       let meters = (height / CONST_FACTOR) * width;
       if (w.box) {
-        meters = meters * 1.2;
+        meters = meters * BOX_FACTOR;
       }
       if (w.jackBox) {
-        meters = meters * 2;
+        meters = meters * JACKBOX_FACTOR;
       }
 
       let wordPrice = roundPrice(meters * PRICE_PER_METER);
@@ -2050,11 +2500,13 @@
     let price = totalWordsPrice;
 
     let totalFramePrice = 0;
+    let totalFrameMeters = 0;
     frames.forEach(f => {
       const height = f.heightCm / 100;
       const width = f.widthCm / 100;
       const qty = f.qty || 1;
       totalFramePrice += roundPrice(width * height * FRAME_PRICE_PER_METER) * qty;
+      totalFrameMeters += width * height * qty;
     });
 
     const basketPrice = (parseFloat(basketPriceInput.value) || 0) * 1000;
@@ -2069,6 +2521,7 @@
     priceOut.textContent = price.toLocaleString('en-US');
     framePriceOut.textContent = totalFramePrice.toLocaleString('en-US');
     totalPriceOut.textContent = total.toLocaleString('en-US') + ' د.ع';
+    frameMetersOut.textContent = Math.round(totalFrameMeters * 100) / 100;
   }
 
   addWordBtn.addEventListener('click', addWordFromForm);
@@ -2091,6 +2544,16 @@
   newFrameQtyInput.addEventListener('input', updateFramePreview);
   updateFramePreview();
   renderFramesTable();
+
+  // تعبئة حقول الإعدادات بالقيم الحالية وربطها بالتحديث التلقائي
+  document.getElementById('setPricePerMeter').value = currentSettings.pricePerMeter;
+  document.getElementById('setFramePricePerMeter').value = currentSettings.framePricePerMeter;
+  document.getElementById('setStrokePrice').value = currentSettings.strokePrice;
+  document.getElementById('setConstFactor').value = currentSettings.constFactor;
+  document.getElementById('setBoxFactor').value = currentSettings.boxFactor;
+  document.getElementById('setJackBoxFactor').value = currentSettings.jackBoxFactor;
+  ['setPricePerMeter','setFramePricePerMeter','setStrokePrice','setConstFactor','setBoxFactor','setJackBoxFactor']
+    .forEach(id => document.getElementById(id).addEventListener('input', applySettingsFromForm));
 
   calculate();
 
@@ -2125,29 +2588,25 @@
     let wordsRowsHtml = '';
     let sumWordsPrice = 0;
     let sumWordsMeters = 0;
-    let sumWordsCost = 0;
 
     if (words.length === 0) {
-      wordsRowsHtml = `<tr><td colspan="10" style="padding:14px; text-align:center; color:#999;">لا توجد كلمات مضافة</td></tr>`;
+      wordsRowsHtml = `<tr><td colspan="9" style="padding:14px; text-align:center; color:#999;">لا توجد كلمات مضافة</td></tr>`;
     } else {
       words.forEach((w, index) => {
         const height = w.heightCm / 100;
         const width = w.widthCm / 100;
         const qty = w.qty || 1;
         let meters = (height / CONST_FACTOR) * width;
-        if (w.box) meters = meters * 1.2;
-        if (w.jackBox) meters = meters * 2;
+        if (w.box) meters = meters * BOX_FACTOR;
+        if (w.jackBox) meters = meters * JACKBOX_FACTOR;
         let wordPrice = roundPrice(meters * PRICE_PER_METER);
         if (w.stroke) wordPrice += JACK_BOOK_PRICE;
-        let costPrice = roundPrice(meters * COST_PRICE_PER_METER);
 
         meters = meters * qty;
         wordPrice = wordPrice * qty;
-        costPrice = costPrice * qty;
 
         sumWordsMeters += meters;
         sumWordsPrice += wordPrice;
-        sumWordsCost += costPrice;
 
         wordsRowsHtml += `
           <tr>
@@ -2160,7 +2619,6 @@
             <td style="${rowTdStyle}">${w.jackBox ? 'نعم' : '-'}</td>
             <td style="${rowTdStyle}">${Math.round(meters * 100) / 100}</td>
             <td style="${rowTdStyle}">${wordPrice.toLocaleString('en-US')}</td>
-            <td style="${rowTdStyle}">${costPrice.toLocaleString('en-US')}</td>
           </tr>`;
       });
     }
@@ -2233,7 +2691,6 @@
               <th style="${thStyle}">وجهين</th>
               <th style="${thStyle}">الأمتار</th>
               <th style="${thStyle}">السعر</th>
-              <th style="${thStyle}">الكلفة</th>
             </tr>
           </thead>
           <tbody>${wordsRowsHtml}</tbody>
@@ -2242,7 +2699,6 @@
               <td colspan="7" style="${totalRowStyle}">المجموع</td>
               <td style="${totalRowStyle}">${Math.round(sumWordsMeters * 100) / 100}</td>
               <td style="${totalRowStyle}">${sumWordsPrice.toLocaleString('en-US')}</td>
-              <td style="${totalRowStyle}">${sumWordsCost.toLocaleString('en-US')}</td>
             </tr>
           </tfoot>
         </table>
@@ -2445,6 +2901,292 @@
   }
 
   clearAllBtn.addEventListener('click', clearAllData);
+
+
+  // ================= استيراد القياسات من ملف PDF =================
+  (function(){
+
+    function dil(s,w,h,rx,ry){
+      const t=new Uint8Array(w*h),o=new Uint8Array(w*h),ps=new Int32Array(Math.max(w,h)+1);
+      for(let y=0;y<h;y++){ps[0]=0;for(let x=0;x<w;x++)ps[x+1]=ps[x]+s[y*w+x];
+        for(let x=0;x<w;x++){const a=Math.max(0,x-rx),b=Math.min(w,x+rx+1);t[y*w+x]=ps[b]-ps[a]>0?1:0;}}
+      for(let x=0;x<w;x++){ps[0]=0;for(let y=0;y<h;y++)ps[y+1]=ps[y]+t[y*w+x];
+        for(let y=0;y<h;y++){const a=Math.max(0,y-ry),b=Math.min(h,y+ry+1);o[y*w+x]=ps[b]-ps[a]>0?1:0;}}
+      return o;
+    }
+    function inv(s){const o=new Uint8Array(s.length);for(let i=0;i<s.length;i++)o[i]=s[i]?0:1;return o;}
+    // d = RGBA بيانات الصورة → قناع (1 = محتوى التصميم، 0 = خلفية)
+    function buildMask(d,W,H){
+      const n=W*H,m=new Uint8Array(n);let tr=0;
+      for(let i=0;i<n;i++)if(d[i*4+3]<250)tr++;
+      if(tr>n*0.02){for(let i=0;i<n;i++)m[i]=d[i*4+3]>40?1:0;return m;}
+      // صفحة معبّأة بالكامل: نحدد ألوان الخلفية من الإطار الخارجي (يدعم الخلفيات المخططة)
+      const t=Math.max(2,Math.round(W*0.01)),cnt={};let tot=0;
+      const q=i=>((d[i*4]>>4)<<8)|((d[i*4+1]>>4)<<4)|(d[i*4+2]>>4);
+      for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+        if(x<t||y<t||x>=W-t||y>=H-t){const k=q(y*W+x);cnt[k]=(cnt[k]||0)+1;tot++;}}
+      const bg=Object.keys(cnt).filter(k=>cnt[k]>=tot*0.06).map(k=>{k=+k;return[((k>>8)&15)*16+8,((k>>4)&15)*16+8,(k&15)*16+8];});
+      if(!bg.length)bg.push([255,255,255]);
+      for(let i=0;i<n;i++){let md=1e9;
+        for(const c of bg){const e=Math.abs(d[i*4]-c[0])+Math.abs(d[i*4+1]-c[1])+Math.abs(d[i*4+2]-c[2]);if(e<md)md=e;}
+        m[i]=md>70?1:0;}
+      // فتح مورفولوجي لإزالة حواف الخطوط الرفيعة (حدود الخلفية المخططة)
+      return dil(inv(dil(inv(m),W,H,2,2)),W,H,2,2);
+    }
+    function detectBlocks(m,W,H,mergePct){
+      const r=Math.max(1,Math.round(W*mergePct/200)),dm=dil(m,W,H,r,r),n=W*H;
+      const lab=new Int32Array(n),st=new Int32Array(n);let L=0;
+      for(let i=0;i<n;i++){if(dm[i]&&!lab[i]){L++;let sp=0;st[sp++]=i;lab[i]=L;
+        while(sp){const c=st[--sp],x=c%W;
+          if(x>0&&dm[c-1]&&!lab[c-1]){lab[c-1]=L;st[sp++]=c-1;}
+          if(x<W-1&&dm[c+1]&&!lab[c+1]){lab[c+1]=L;st[sp++]=c+1;}
+          if(c>=W&&dm[c-W]&&!lab[c-W]){lab[c-W]=L;st[sp++]=c-W;}
+          if(c<n-W&&dm[c+W]&&!lab[c+W]){lab[c+W]=L;st[sp++]=c+W;}}}}
+      const bb=[];
+      for(let i=0;i<n;i++){const l=lab[i];if(m[i]&&l){const x=i%W,y=(i/W)|0;
+        const b=bb[l]||(bb[l]={x0:W,y0:H,x1:-1,y1:-1,a:0});
+        if(x<b.x0)b.x0=x;if(x>b.x1)b.x1=x;if(y<b.y0)b.y0=y;if(y>b.y1)b.y1=y;b.a++;}}
+      return bb.filter(b=>b&&b.a>n*0.0003);
+    }
+    // دمج الكلمات التي على سطر واحد (ارتفاع متقارب + محاذاة عمودية + مسافة أفقية معقولة)
+    function mergeLines(bl){
+      bl=bl.map(b=>Object.assign({},b));let ch=true;
+      while(ch){ch=false;
+        for(let i=0;i<bl.length&&!ch;i++)for(let j=i+1;j<bl.length&&!ch;j++){
+          const a=bl[i],b=bl[j],ha=a.y1-a.y0+1,hb=b.y1-b.y0+1;
+          const vo=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)+1;
+          const gap=Math.max(a.x0,b.x0)-Math.min(a.x1,b.x1)-1;
+          if(Math.min(ha,hb)/Math.max(ha,hb)>0.7&&vo>0.7*Math.min(ha,hb)&&gap<Math.max(ha,hb)){
+            a.x0=Math.min(a.x0,b.x0);a.x1=Math.max(a.x1,b.x1);a.y0=Math.min(a.y0,b.y0);a.y1=Math.max(a.y1,b.y1);a.a+=b.a;
+            bl.splice(j,1);ch=true;}}}
+      return bl;
+    }
+    // ترتيب القراءة من اليمين: الأعمدة من اليمين لليسار، وداخل العمود من الأعلى للأسفل
+    function orderBlocks(a,b){
+      const ov=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0);
+      return ov>0.5*Math.min(a.x1-a.x0,b.x1-b.x0)?a.y0-b.y0:b.x1-a.x1;
+    }
+
+
+    const $=id=>document.getElementById(id);
+    const ov=$('pdfImp'),cv=$('pdfImpCanvas'),ctx=cv.getContext('2d',{willReadFrequently:true}),ovl=$('pdfImpBoxes');
+    document.body.appendChild(ov); // خارج البطاقة حتى لا يقصّها backdrop-filter
+    let pdf=null,mask=null,W=0,H=0,pageWpt=0,blocks=[],bid=0,selId=null,drag=null,pageCm=0,xmpRaw='';
+    const PT2CM=2.54/72;
+    if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const hint=t=>{$('pdfImpHint').textContent=t;};
+    const scale=()=>(parseFloat($('pdfImpRealW').value)||pageCm)/W; // سم لكل بكسل
+    const r1=v=>Math.round(v*10)/10;
+    // تقريب لعدد صحيح: الكسر 0.5 فأكثر يُقرَّب لأعلى، وأقل من 0.5 يُحذف (365.6→366 ، 100.3→100)
+    const rd=v=>Math.round(r1(v));
+    // قراءة حجم اللوحة الحقيقي المخزّن داخل ملف التصميم (XMP) لتحديد مقياس الرسم (×10 للوحات الكبيرة)
+    function xmpScaleFor(pc){
+      const m=xmpRaw&&(xmpRaw.match(/<xmpTPg:MaxPageSize[\s\S]*?<\/xmpTPg:MaxPageSize>/i)||xmpRaw.match(/<xmpTPg:MaxPageSize[^>]*\/>/i));
+      if(!m)return 0;const s=m[0];
+      const w=parseFloat((s.match(/stDim:w(?:\s*=\s*"|\s*>)\s*([\d.]+)/i)||[])[1]),u=((s.match(/stDim:unit(?:\s*=\s*"|\s*>)\s*([A-Za-z]+)/i)||[])[1]||'').toLowerCase();
+      const f={inches:2.54,millimeters:.1,centimeters:1,points:2.54/72,pixels:2.54/72,picas:2.54/6,meters:100}[u];
+      if(!w||!f||!pc)return 0;const r=w*f/pc;
+      return Math.abs(r-1)<0.02?1:Math.abs(r-10)<0.2?10:Math.abs(r-100)<2?100:0;
+    }
+
+    $('openPdfImpBtn').addEventListener('click',()=>{ov.style.display='flex';});
+    const HINT0='اختر ملف PDF. يُقاس كل عنصر (الاسم العربي، الاسم الإنجليزي، الشعار) بالترتيب. إذا كان التصميم مرسوماً بمقياس مصغّر اكتب العرض الحقيقي للوحة بالسنتيمتر.';
+    // تفريغ النافذة بالكامل: لا يبقى أي ملف أو صورة أو مربعات
+    function resetPanel(){
+      try{if(pdf)pdf.destroy();}catch(e){}
+      pdf=null;mask=null;blocks=[];selId=null;drag=null;W=H=pageWpt=0;
+      ctx.clearRect(0,0,cv.width,cv.height);cv.width=10;cv.height=10;
+      ovl.innerHTML='';$('pdfImpRows').innerHTML='';setZoom(1,0,0,0,0);
+      $('pdfImpFile').value='';$('pdfImpDropName').textContent='';dc=0;$('pdfImpDrop').classList.remove('over');$('pdfImpPage').value=1;$('pdfImpPage').removeAttribute('max');
+      $('pdfImpRealW').value='';$('pdfImpRealW').dataset.t='';pageCm=0;xmpRaw='';
+      $('pdfImpMerge').value=2.4;$('pdfImpLines').checked=true;$('pdfImpAuto').checked=false;$('pdfImpReplace').checked=false;
+      hint(HINT0);
+    }
+    function closePanel(){resetPanel();ov.style.display='none';}
+    $('pdfImpClose').addEventListener('click',closePanel);
+    ov.addEventListener('pointerdown',e=>{if(e.target===ov)closePanel();});
+
+    async function loadFile(f){
+      if(!f)return;
+      if(!/\.pdf$/i.test(f.name)&&f.type!=='application/pdf'){hint('الملف غير مدعوم — اختر ملف PDF فقط.');return;}
+      if(!window.pdfjsLib){hint('تعذّر تحميل مكتبة قراءة PDF — تأكد من الاتصال بالإنترنت ثم أعد فتح البرنامج.');return;}
+      try{
+        hint('جاري قراءة الملف...');
+        try{if(pdf)pdf.destroy();}catch(e){}
+        pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+        xmpRaw='';try{const md=await pdf.getMetadata();xmpRaw=(md&&md.metadata&&md.metadata.getRaw&&md.metadata.getRaw())||'';}catch(e){}
+        $('pdfImpPage').value=1;$('pdfImpPage').max=pdf.numPages;$('pdfImpRealW').dataset.t='';
+        $('pdfImpDropName').textContent='📄 '+f.name;
+        await loadPage(true);
+      }catch(err){hint('تعذّرت قراءة الملف: '+(err&&err.message||err));}
+    }
+    $('pdfImpFile').addEventListener('change',e=>loadFile(e.target.files[0]));
+    // سحب وإفلات ملف PDF على النافذة
+    const dz=$('pdfImpDrop');let dc=0;
+    const isFiles=e=>e.dataTransfer&&Array.from(e.dataTransfer.types||[]).includes('Files');
+    ov.addEventListener('dragenter',e=>{if(!isFiles(e))return;e.preventDefault();dc++;dz.classList.add('over');});
+    ov.addEventListener('dragover',e=>{if(!isFiles(e))return;e.preventDefault();e.dataTransfer.dropEffect='copy';});
+    ov.addEventListener('dragleave',e=>{if(!isFiles(e))return;dc=Math.max(0,dc-1);if(!dc)dz.classList.remove('over');});
+    ov.addEventListener('drop',e=>{
+      if(!isFiles(e))return;e.preventDefault();dc=0;dz.classList.remove('over');
+      const f=Array.from(e.dataTransfer.files).find(x=>/\.pdf$/i.test(x.name)||x.type==='application/pdf')||e.dataTransfer.files[0];
+      loadFile(f);
+    });
+    dz.addEventListener('click',()=>$('pdfImpFile').click());
+    async function loadPage(resetW){
+      const p=await pdf.getPage(Math.min(pdf.numPages,Math.max(1,+$('pdfImpPage').value||1)));
+      const v1=p.getViewport({scale:1});pageWpt=v1.width;
+      const vp=p.getViewport({scale:1400/Math.max(v1.width,v1.height)});
+      if(resetW)setZoom(1,0,0,0,0);
+      cv.width=W=Math.round(vp.width);cv.height=H=Math.round(vp.height);
+      ctx.clearRect(0,0,W,H);
+      await p.render({canvasContext:ctx,viewport:vp,background:'rgba(0,0,0,0)'}).promise;
+      const uu=p.userUnit||1;pageCm=pageWpt*PT2CM*uu;let note='';
+      if(resetW||!$('pdfImpRealW').dataset.t){
+        let sc=1;const xs=xmpScaleFor(pageCm);
+        if(xs){sc=xs;note=sc>1?'مقياس الرسم المخزّن داخل الملف 1:'+sc:'';}
+        $('pdfImpRealW').value=r1(pageCm*sc);$('pdfImpRealW').dataset.t='';
+      }
+      mask=buildMask(ctx.getImageData(0,0,W,H).data,W,H);
+      detect();
+      if(note)hint($('pdfImpHint').textContent+' — العرض الحقيقي '+$('pdfImpRealW').value+' سم ('+note+')');
+    }
+    function detect(){
+      if(!mask)return;
+      let bl=detectBlocks(mask,W,H,parseFloat($('pdfImpMerge').value)||2.4);
+      if($('pdfImpLines').checked)bl=mergeLines(bl);
+      selId=null;
+      blocks=bl.sort(orderBlocks).map(b=>Object.assign(b,{id:++bid,qty:1}));
+      render();
+      hint(blocks.length?'تم العثور على '+blocks.length+' عنصر. القياسات بالسنتيمتر. إن احتجت: اضغط على مربع لتحديده ثم حرّكه أو غيّر حجمه من المقابض (أو بالأسهم)، واسحب في مكان فارغ لرسم مربع جديد، أو غيّر حساسية الدمج.'
+        :'لم يُعثر على عناصر — ارسم عنصراً يدوياً بالسحب على الصورة.');
+    }
+    const place=(d,b)=>{d.style.cssText=`left:${b.x0/W*100}%;top:${b.y0/H*100}%;width:${(b.x1-b.x0+1)/W*100}%;height:${(b.y1-b.y0+1)/H*100}%`;};
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    const HD=['nw','n','ne','e','se','s','sw','w'];
+    function render(){
+      const k=scale();ovl.innerHTML='';
+      blocks.forEach((b,i)=>{
+        const d=document.createElement('div');d.className='pib'+(b.id===selId?' on':'');d.dataset.id=b.id;place(d,b);
+        d.innerHTML='<span>'+(i+1)+'</span>'+(b.id===selId?HD.map(h=>`<i class="hd ${h}" data-h="${h}"></i>`).join(''):'');
+        ovl.appendChild(d);
+      });
+      const tb=$('pdfImpRows');tb.innerHTML='';
+      blocks.forEach((b,i)=>{
+        const hh=b.oh!=null?b.oh:rd((b.y1-b.y0+1)*k),ww=b.ow!=null?b.ow:rd((b.x1-b.x0+1)*k);
+        const tr=document.createElement('tr');tr.className=b.id===selId?'on':'';
+        tr.innerHTML=`<td>${i+1}</td><td><canvas width="90" height="44"></canvas></td>
+          <td><input type="number" step="0.1" value="${hh}" data-f="oh"></td>
+          <td><input type="number" step="0.1" value="${ww}" data-f="ow"></td>
+          <td><input type="number" min="1" step="1" value="${b.qty}" data-f="qty"></td>
+          <td><input type="checkbox" class="pib-ck" data-f="stroke" ${b.stroke?'checked':''}></td>
+          <td><input type="checkbox" class="pib-ck" data-f="box" ${b.box?'checked':''}></td>
+          <td><button type="button" class="pib-del">حذف</button></td>`;
+        const tc=tr.querySelector('canvas').getContext('2d'),bw=b.x1-b.x0+1,bh=b.y1-b.y0+1,s=Math.min(90/bw,44/bh);
+        tc.fillStyle='#8a8a8a';tc.fillRect(0,0,90,44);
+        tc.drawImage(cv,b.x0,b.y0,bw,bh,(90-bw*s)/2,(44-bh*s)/2,bw*s,bh*s);
+        tr.querySelectorAll('input:not(.pib-ck)').forEach(inp=>inp.addEventListener('input',()=>{b[inp.dataset.f]=parseFloat(inp.value)||0;}));
+        tr.querySelectorAll('.pib-ck').forEach(ck=>ck.addEventListener('change',()=>{b[ck.dataset.f]=ck.checked;}));
+        tr.querySelector('.pib-del').addEventListener('click',e=>{e.stopPropagation();removeBlock(b.id);});
+        tr.addEventListener('click',e=>{if(e.target.tagName!=='INPUT'&&b.id!==selId){selId=b.id;render();}});
+        tb.appendChild(tr);
+      });
+    }
+    function removeBlock(id){blocks=blocks.filter(o=>o.id!==id);if(selId===id)selId=null;render();}
+    // ضبط المربع على حدود المحتوى الفعلية داخله
+    function snap(b){
+      const n={x0:W,y0:H,x1:-1,y1:-1};
+      for(let y=b.y0;y<=b.y1;y++)for(let x=b.x0;x<=b.x1;x++)if(mask[y*W+x]){if(x<n.x0)n.x0=x;if(x>n.x1)n.x1=x;if(y<n.y0)n.y0=y;if(y>n.y1)n.y1=y;}
+      if(n.x1>=0){Object.assign(b,n);delete b.oh;delete b.ow;}
+    }
+    $('pdfImpMerge').addEventListener('change',detect);
+    $('pdfImpLines').addEventListener('change',detect);
+    $('pdfImpPage').addEventListener('change',()=>pdf&&loadPage(false));
+    $('pdfImpRealW').addEventListener('input',()=>{$('pdfImpRealW').dataset.t='1';
+      blocks.forEach(b=>{delete b.oh;delete b.ow;});render();});
+
+    // رسم عنصر جديد بالسحب في مكان فارغ + تحريك/تكبير/تصغير المربع المحدد
+    const sel=document.createElement('div');sel.className='pib sel';
+    const pt=e=>{const r=cv.getBoundingClientRect();return{x:clamp((e.clientX-r.left)/r.width*W,0,W-1),y:clamp((e.clientY-r.top)/r.height*H,0,H-1)};};
+    ovl.addEventListener('pointerdown',e=>{
+      if(!mask)return;const p=pt(e),hd=e.target.closest('.hd'),bx=e.target.closest('.pib');
+      if(bx&&bx.dataset.id){
+        const b=blocks.find(o=>o.id==bx.dataset.id);if(!b)return;
+        if(b.id!==selId){selId=b.id;render();}
+        drag={mode:hd?hd.dataset.h:'move',p,b,o:{x0:b.x0,y0:b.y0,x1:b.x1,y1:b.y1}};
+      }else{drag={mode:'draw',p};ovl.appendChild(sel);}
+      ovl.setPointerCapture(e.pointerId);e.preventDefault();
+    });
+    ovl.addEventListener('pointermove',e=>{
+      if(!drag)return;const p=pt(e);
+      if(drag.mode==='draw'){
+        sel.style.cssText=`left:${Math.min(drag.p.x,p.x)/W*100}%;top:${Math.min(drag.p.y,p.y)/H*100}%;width:${Math.abs(p.x-drag.p.x)/W*100}%;height:${Math.abs(p.y-drag.p.y)/H*100}%`;return;}
+      const dx=Math.round(p.x-drag.p.x),dy=Math.round(p.y-drag.p.y),o=drag.o,m=drag.mode,b=drag.b;
+      let{x0,y0,x1,y1}=o;
+      if(m==='move'){const w=o.x1-o.x0,h=o.y1-o.y0;x0=clamp(o.x0+dx,0,W-1-w);y0=clamp(o.y0+dy,0,H-1-h);x1=x0+w;y1=y0+h;}
+      else{
+        if(m.includes('w'))x0=clamp(o.x0+dx,0,o.x1-2);
+        if(m.includes('e'))x1=clamp(o.x1+dx,o.x0+2,W-1);
+        if(m.includes('n'))y0=clamp(o.y0+dy,0,o.y1-2);
+        if(m.includes('s'))y1=clamp(o.y1+dy,o.y0+2,H-1);
+      }
+      Object.assign(b,{x0,y0,x1,y1});delete b.oh;delete b.ow;
+      const d=ovl.querySelector(`.pib[data-id="${b.id}"]`);if(d)place(d,b);
+    });
+    function endDrag(e){
+      if(!drag)return;const dr=drag;drag=null;
+      if(dr.mode==='draw'){
+        sel.remove();const p=pt(e),a=Math.round(Math.min(dr.p.x,p.x)),b=Math.round(Math.min(dr.p.y,p.y)),c=Math.round(Math.max(dr.p.x,p.x)),d=Math.round(Math.max(dr.p.y,p.y));
+        if(c-a<6||d-b<6){selId=null;render();return;}
+        const n={x0:a,y0:b,x1:c,y1:d,a:0,id:++bid,qty:1};snap(n);
+        blocks.push(n);blocks.sort(orderBlocks);selId=n.id;render();return;}
+      if($('pdfImpAuto').checked)snap(dr.b);
+      render();
+    }
+    ovl.addEventListener('pointerup',endDrag);
+    ovl.addEventListener('pointercancel',endDrag);
+    $('pdfImpSnap').addEventListener('click',()=>{const b=blocks.find(o=>o.id===selId);if(b){snap(b);render();}else hint('حدّد مربعاً أولاً بالضغط عليه.');});
+    $('pdfImpDelSel').addEventListener('click',()=>{if(selId)removeBlock(selId);else hint('حدّد مربعاً أولاً بالضغط عليه.');});
+    // الأسهم: تحريك 1 بكسل (Alt = 5) — Shift+الأسهم: تكبير/تصغير من الحافة اليمنى/السفلية — Delete: حذف
+    document.addEventListener('keydown',e=>{
+      if(ov.style.display==='none'||!selId||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+      const b=blocks.find(o=>o.id===selId);if(!b)return;
+      if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();removeBlock(selId);return;}
+      const s=e.altKey?5:1,dx=e.key==='ArrowRight'?s:e.key==='ArrowLeft'?-s:0,dy=e.key==='ArrowDown'?s:e.key==='ArrowUp'?-s:0;
+      if(!dx&&!dy)return;e.preventDefault();
+      if(e.shiftKey){b.x1=clamp(b.x1+dx,b.x0+2,W-1);b.y1=clamp(b.y1+dy,b.y0+2,H-1);}
+      else{const w=b.x1-b.x0,h=b.y1-b.y0;b.x0=clamp(b.x0+dx,0,W-1-w);b.y0=clamp(b.y0+dy,0,H-1-h);b.x1=b.x0+w;b.y1=b.y0+h;}
+      delete b.oh;delete b.ow;render();
+    });
+
+    // تكبير وتصغير المعاينة: الأزرار، أو Ctrl + عجلة الماوس (يثبت المكان تحت المؤشر)
+    let zoom=1;const stg=$('pdfImpStage'),inn=$('pdfImpInner');
+    function setZoom(z,fx,fy,ox,oy){
+      z=clamp(z,1,12);
+      if(fx==null){fx=(stg.scrollLeft+stg.clientWidth/2)/inn.offsetWidth;fy=(stg.scrollTop+stg.clientHeight/2)/inn.offsetHeight;ox=stg.clientWidth/2;oy=stg.clientHeight/2;}
+      zoom=z;inn.style.width=(z*100)+'%';$('pdfImpZoomVal').textContent=Math.round(z*100)+'%';
+      stg.scrollLeft=fx*inn.offsetWidth-ox;stg.scrollTop=fy*inn.offsetHeight-oy;
+    }
+    $('pdfImpZoomIn').addEventListener('click',()=>setZoom(zoom*1.25));
+    $('pdfImpZoomOut').addEventListener('click',()=>setZoom(zoom/1.25));
+    $('pdfImpZoomFit').addEventListener('click',()=>setZoom(1,0,0,0,0));
+    stg.addEventListener('wheel',e=>{
+      if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();
+      const r=inn.getBoundingClientRect(),s=stg.getBoundingClientRect();
+      setZoom(zoom*(e.deltaY<0?1.15:1/1.15),(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height,e.clientX-s.left,e.clientY-s.top);
+    },{passive:false});
+    $('pdfImpAddBtn').addEventListener('click',()=>{
+      if(!blocks.length){alert('لا توجد عناصر لإضافتها');return;}
+      if($('pdfImpReplace').checked)words=[];
+      const k=scale();
+      blocks.forEach(b=>{
+        const h=b.oh!=null?b.oh:rd((b.y1-b.y0+1)*k),w=b.ow!=null?b.ow:rd((b.x1-b.x0+1)*k);
+        if(h>0&&w>0)words.push({id:++wordIdCounter,heightCm:r1(h),widthCm:r1(w),qty:b.qty||1,stroke:!!b.stroke,box:!!b.box,jackBox:false});
+      });
+      exitEditMode();renderWordsTable();calculate();closePanel();
+    });
+  })();
+  // ================= نهاية استيراد PDF =================
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
