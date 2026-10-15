@@ -1386,13 +1386,14 @@
       return loadUsers();
     }
 
-    const localUsers = loadUsers();
-    if (localUsers.length > 0) return localUsers;
-
+    // الاستضافة (GitHub Pages وغيره): ملف users.txt الموجود بنفس المجلد هو المرجع دائماً
+    // نقراه في كل مرة ونحدّث منه القائمة المحلية، فأي تعديل تسويه على الملف بـ GitHub يظهر مباشرة
     const inFolder = await loadUsersFromTxtFile();
     if (inFolder.ok && inFolder.users.length > 0) {
       saveUsers(inFolder.users);
+      return inFolder.users;
     }
+    // إذا الملف مو موجود أو فارغ نستخدم النسخة المحلية المحفوظة (بدون ما نمسحها)
     return loadUsers();
   }
 
@@ -1520,9 +1521,13 @@
   // ترجع { ok, users }: ok = الملف موجود وقدرنا نقراه فعلاً
   async function loadUsersFromTxtFile() {
     try {
-      const response = await fetch('users.txt', { cache: 'no-store' });
+      // نضيف رقم عشوائي حتى المتصفح وكاش GitHub ما يرجّعون نسخة قديمة
+      const url = new URL('users.txt', window.location.href);
+      url.searchParams.set('t', Date.now());
+      const response = await fetch(url.toString(), { cache: 'no-store' });
       if (!response.ok) return { ok: false, users: null };
-      const text = await response.text();
+      let text = await response.text();
+      text = text.replace(/^\uFEFF/, '').replace(/\r/g, '');
       return { ok: true, users: txtToUsers(text) };
     } catch (e) {
       return { ok: false, users: null };
